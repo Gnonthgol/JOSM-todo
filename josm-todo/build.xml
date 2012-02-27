@@ -93,7 +93,7 @@
             ************************************************
             -->
             <manifest>
-                <attribute name="Author" value="Gnonthgol and Andrew Buck"/>
+                <attribute name="Author" value="Gnonthgol and AndrewBuck"/>
                 <attribute name="Plugin-Class" value="org.openstreetmap.josm.plugins.todo.TodoPlugin"/>
                 <attribute name="Plugin-Date" value="${version.entry.commit.date}"/>
                 <attribute name="Plugin-Description" value="Adds a todo list dialog that makes it easy to go through large lists of objects"/>
