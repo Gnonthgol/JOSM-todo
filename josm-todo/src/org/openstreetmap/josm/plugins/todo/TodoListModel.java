@@ -90,6 +90,15 @@ public class TodoListModel extends AbstractListModel {
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
+    public void markItems(Collection<OsmPrimitive> items) {
+        int size = getSize();
+        for (OsmPrimitive item: items) {
+            if (todoList.remove(item))
+                doneList.add(item);
+        }
+        super.fireIntervalRemoved(this, 0, size-1);
+    }
+
     public void clear() {
         int size = getSize();
         doneList.clear();

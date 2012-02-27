@@ -38,6 +38,7 @@ public class TodoDialog extends ToggleDialog {
     private JList lstPrimitives;
     private final TodoPopup popupMenu;
     private AddAction actAdd;
+    private MarkSelectedAction actMarkSelected;
 
     /**
      * Builds the content panel for this dialog
@@ -105,6 +106,7 @@ public class TodoDialog extends ToggleDialog {
     @Override
     public void showNotify() {
         SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
+        SelectionEventManager.getInstance().addSelectionListener(actMarkSelected, FireMode.IN_EDT_CONSOLIDATED);
     }
 
     private class SelectAction extends AbstractAction implements ListSelectionListener {
@@ -193,6 +195,39 @@ public class TodoDialog extends ToggleDialog {
         }
     }
 
+    private class MarkSelectedAction extends AbstractAction implements SelectionChangedListener {
+        private final TodoListModel model;
+
+        public MarkSelectedAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Mark selected"));
+            putValue(SHORT_DESCRIPTION,  tr("Mark the selected items as done."));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","select"));
+            updateEnabledState();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
+            Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
+            model.markItems(sel);
+            updateTitle();
+        }
+
+        public void updateEnabledState() {
+            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+                setEnabled(false);
+            } else {
+                setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+            }
+        }
+
+        @Override
+        public void selectionChanged(Collection<? extends OsmPrimitive> arg) {
+            updateEnabledState();
+        }
+    }
+
     private class MarkAction extends AbstractAction implements ListSelectionListener {
 
         TodoListModel model;
@@ -200,7 +235,7 @@ public class TodoDialog extends ToggleDialog {
         public MarkAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item as done. (])"));
+            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item in the list as done. (])"));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","check"));
             updateEnabledState();
         }
@@ -313,6 +348,7 @@ public class TodoDialog extends ToggleDialog {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
+            add(actMarkSelected = new MarkSelectedAction(model));
             add(new MarkAllAction(model));
             addSeparator();
             add(new UnmarkAllAction(model));
