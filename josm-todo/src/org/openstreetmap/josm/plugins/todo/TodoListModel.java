@@ -1,5 +1,7 @@
 package org.openstreetmap.josm.plugins.todo;
 
+import static org.openstreetmap.josm.tools.I18n.tr;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -100,6 +102,12 @@ public class TodoListModel extends AbstractListModel {
         todoList.addAll(doneList);
         doneList.clear();
         super.fireIntervalAdded(this, size, getSize());
+    }
+
+    public String getSummary() {
+        int totalSize = getSize()+getDoneSize();
+        if (getSize() == 0 && getDoneSize() == 0) return tr("Todo list");
+        else return tr("Todo list {0}/{1} ({2}%)", getDoneSize(), totalSize, 100.0*getDoneSize()/totalSize);
     }
 
 }

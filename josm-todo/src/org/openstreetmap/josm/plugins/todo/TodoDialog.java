@@ -98,6 +98,10 @@ public class TodoDialog extends ToggleDialog {
         AutoScaleAction.autoScale("selection");
     }
 
+    protected void updateTitle() {
+        setTitle(model.getSummary());
+    }
+
     @Override
     public void showNotify() {
         SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
@@ -172,6 +176,7 @@ public class TodoDialog extends ToggleDialog {
             if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
             Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
             model.addItems(sel);
+            updateTitle();
         }
 
         public void updateEnabledState() {
@@ -204,6 +209,7 @@ public class TodoDialog extends ToggleDialog {
         public void actionPerformed(ActionEvent arg0) {
             model.markSelected();
             selectAndZoom(model.getSelected());
+            updateTitle();
         }
 
         public void updateEnabledState() {
@@ -232,6 +238,7 @@ public class TodoDialog extends ToggleDialog {
         public void actionPerformed(ActionEvent arg0) {
             model.markAll();
             selectAndZoom(model.getSelected());
+            updateTitle();
         }
 
     }
@@ -250,6 +257,7 @@ public class TodoDialog extends ToggleDialog {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             model.unmarkAll();
+            updateTitle();
         }
 
     }
@@ -268,6 +276,7 @@ public class TodoDialog extends ToggleDialog {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             model.clear();
+            updateTitle();
         }
 
     }
@@ -290,8 +299,7 @@ public class TodoDialog extends ToggleDialog {
         @Override
         public void launch(MouseEvent evt) {
             int idx = lstPrimitives.locationToIndex(evt.getPoint());
-            if(idx < 0)  return;
-            model.setSelected((OsmPrimitive)model.getElementAt(idx));
+            if(idx >= 0)  model.setSelected((OsmPrimitive)model.getElementAt(idx));
 
             popupMenu.show(lstPrimitives, evt.getX(), evt.getY());
         }
