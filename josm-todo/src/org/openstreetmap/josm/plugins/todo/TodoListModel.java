@@ -35,16 +35,16 @@ public class TodoListModel extends AbstractListModel {
     }
 
     public OsmPrimitive getSelected() {
-        if (getSize() == 0 || selectionModel.isSelectionEmpty()) return null;
+        if (getSize() == 0 || selectionModel.isSelectionEmpty() || selectionModel.getMinSelectionIndex() >= getSize()) return null;
         return todoList.get(selectionModel.getMinSelectionIndex());
     }
 
     public void incrementSelection() {
-	int idx;
-	if(getSize() == 0) return;
+        int idx;
+        if(getSize() == 0) return;
         if (selectionModel.isSelectionEmpty())
             idx = 0;
-	else
+        else
             idx = selectionModel.getMinSelectionIndex() + 1;
 
         if(idx > getSize()-1)  idx = getSize()-1;
@@ -57,7 +57,7 @@ public class TodoListModel extends AbstractListModel {
         int size = getSize();
         if (size == 0) {
             todoList.addAll(items);
-            super.fireIntervalAdded(this, 0, getSize());
+            super.fireIntervalAdded(this, 0, getSize()-1);
             selectionModel.setSelectionInterval(0, 0);
         } else {
             todoList.ensureCapacity(size + items.size());
@@ -65,7 +65,7 @@ public class TodoListModel extends AbstractListModel {
                 if (!todoList.contains(item))
                     todoList.add(item);
             }
-            super.fireIntervalAdded(this, size, getSize());
+            super.fireIntervalAdded(this, size, getSize()-1);
         }
     }
 
@@ -87,21 +87,28 @@ public class TodoListModel extends AbstractListModel {
         int size = getSize();
         doneList.addAll(todoList);
         todoList.clear();
-        super.fireIntervalRemoved(this, 0, size);
+        super.fireIntervalRemoved(this, 0, size-1);
     }
 
     public void clear() {
         int size = getSize();
         doneList.clear();
         todoList.clear();
-        super.fireIntervalRemoved(this, 0, size);
+        super.fireIntervalRemoved(this, 0, size-1);
     }
 
     public void unmarkAll() {
         int size = getSize();
-        todoList.addAll(doneList);
-        doneList.clear();
-        super.fireIntervalAdded(this, size, getSize());
+        if (size == 0) {
+            todoList.addAll(doneList);
+            doneList.clear();
+            super.fireIntervalAdded(this, 0, getSize()-1);
+            selectionModel.setSelectionInterval(0, 0);
+        } else {
+            todoList.addAll(doneList);
+            doneList.clear();
+            super.fireIntervalAdded(this, size, getSize()-1);
+        }
     }
 
     public String getSummary() {
