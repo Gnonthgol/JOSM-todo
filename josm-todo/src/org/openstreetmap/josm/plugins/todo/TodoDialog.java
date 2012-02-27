@@ -299,8 +299,7 @@ public class TodoDialog extends ToggleDialog {
         @Override
         public void launch(MouseEvent evt) {
             int idx = lstPrimitives.locationToIndex(evt.getPoint());
-            if(idx < 0)  return;
-            model.setSelected((OsmPrimitive)model.getElementAt(idx));
+            if(idx >= 0)  model.setSelected((OsmPrimitive)model.getElementAt(idx));
 
             popupMenu.show(lstPrimitives, evt.getX(), evt.getY());
         }
