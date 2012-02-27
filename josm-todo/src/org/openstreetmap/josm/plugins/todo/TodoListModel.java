@@ -57,6 +57,7 @@ public class TodoListModel extends AbstractListModel {
     }
 
     public void addItems(Collection<OsmPrimitive> items) {
+        if (items == null || items.size() == 0) return;
         doneList.removeAll(items);
         int size = getSize();
         if (size == 0) {
@@ -74,7 +75,8 @@ public class TodoListModel extends AbstractListModel {
     }
 
     public void markSelected() {
-        int sel = selectionModel.getMaxSelectionIndex();
+        if (selectionModel.isSelectionEmpty()) return;
+        int sel = selectionModel.getMinSelectionIndex();
         doneList.add(todoList.remove(sel));
         super.fireIntervalRemoved(this, sel, sel);
         if (sel == getSize()) sel = 0;
@@ -89,13 +91,16 @@ public class TodoListModel extends AbstractListModel {
 
     public void markAll() {
         int size = getSize();
+        if (size == 0) return;
         doneList.addAll(todoList);
         todoList.clear();
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
     public void markItems(Collection<OsmPrimitive> items) {
+        if (items == null || items.size() == 0) return;
         int size = getSize();
+        if (size == 0) return;
         for (OsmPrimitive item: items) {
             if (todoList.remove(item))
                 doneList.add(item);
@@ -107,10 +112,11 @@ public class TodoListModel extends AbstractListModel {
         int size = getSize();
         doneList.clear();
         todoList.clear();
-        super.fireIntervalRemoved(this, 0, size-1);
+        if (size > 0) super.fireIntervalRemoved(this, 0, size-1);
     }
 
     public void unmarkAll() {
+        if (getDoneSize() == 0) return;
         int size = getSize();
         if (size == 0) {
             todoList.addAll(doneList);
