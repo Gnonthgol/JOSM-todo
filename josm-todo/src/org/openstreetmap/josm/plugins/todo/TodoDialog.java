@@ -46,8 +46,8 @@ public class TodoDialog extends ToggleDialog {
         DefaultListSelectionModel selectionModel  = new DefaultListSelectionModel();
         model = new TodoListModel(selectionModel);
         lstPrimitives = new JList(model);
-        lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lstPrimitives.setSelectionModel(selectionModel);
+        lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
         lstPrimitives.setTransferHandler(null);
 
