@@ -4,13 +4,15 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.Collection;
-
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -27,6 +29,7 @@ public class TodoDialog extends ToggleDialog {
 
 	private static final long serialVersionUID = 3590739974800809827L;
 	private TodoListModel model;
+	private JList lstPrimitives;
 
 	/**
      * Builds the content panel for this dialog
@@ -34,7 +37,7 @@ public class TodoDialog extends ToggleDialog {
     protected void buildContentPanel() {
         DefaultListSelectionModel selectionModel  = new DefaultListSelectionModel();
         model = new TodoListModel(selectionModel);
-        JList lstPrimitives = new JList(model);
+        lstPrimitives = new JList(model);
         lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lstPrimitives.setSelectionModel(selectionModel);
         lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
@@ -67,9 +70,17 @@ public class TodoDialog extends ToggleDialog {
 		        Shortcut.registerShortcut("subwindow:todo", tr("Toggle: {0}", tr("Todo list")),
 		                KeyEvent.VK_T, Shortcut.CTRL_SHIFT), 150);
 		buildContentPanel();
-		// TODO Auto-generated constructor stub
+		
+		lstPrimitives.addMouseListener(new DblClickHandler());
 	}
 
+	protected static void selectAndZoom(OsmPrimitive object) {
+		if (object == null) return;
+        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
+        Main.map.mapView.getEditLayer().data.setSelected(object);
+        AutoScaleAction.autoScale("selection");
+	}
+	
 	private class SelectAction extends AbstractAction implements ListSelectionListener {
 	    private TodoListModel model;
 
@@ -82,11 +93,7 @@ public class TodoDialog extends ToggleDialog {
 	    }
 
 	    public void actionPerformed(ActionEvent e) {
-	        OsmPrimitive sel = model.getSelected();
-	        if (sel == null) return;
-	        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-	        Main.map.mapView.getEditLayer().data.setSelected(sel);
-	        AutoScaleAction.autoScale("selection");
+	        selectAndZoom(model.getSelected());
 	    }
 
 	    public void updateEnabledState() {
@@ -131,11 +138,7 @@ public class TodoDialog extends ToggleDialog {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			model.removeSelected();
-			OsmPrimitive sel = model.getSelected();
-	        if (sel == null) return;
-	        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-	        Main.map.mapView.getEditLayer().data.setSelected(sel);
-	        AutoScaleAction.autoScale("selection");
+			selectAndZoom(model.getSelected());
 		}
 
 		public void updateEnabledState() {
@@ -147,5 +150,16 @@ public class TodoDialog extends ToggleDialog {
 			updateEnabledState();
 		}
 		
+	}
+	
+	/**
+	 * Responds to double clicks on the list of selected objects
+	 */
+	class DblClickHandler extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (e.getClickCount() < 2 || ! SwingUtilities.isLeftMouseButton(e)) return;
+			selectAndZoom(model.getSelected());
+		}
 	}
 }
