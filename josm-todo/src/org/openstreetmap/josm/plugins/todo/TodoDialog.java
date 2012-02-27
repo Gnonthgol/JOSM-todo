@@ -59,15 +59,22 @@ public class TodoDialog extends ToggleDialog {
         // the add button
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
 
+        // the pass button
+        PassAction actPass;
+        final SideButton passButton = new SideButton(actPass = new PassAction(model));
+        lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
+        Main.registerActionShortcut(actPass, Shortcut.registerShortcut("subwindow:todo:pass",
+                tr("Pass over element without marking it"), KeyEvent.VK_OPEN_BRACKET, Shortcut.DIRECT));
+
         // the mark button
         MarkAction actMark;
         final SideButton markButton = new SideButton(actMark = new MarkAction(model));
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
         Main.registerActionShortcut(actMark, Shortcut.registerShortcut("subwindow:todo:mark",
-                tr("Mark element done"), KeyEvent.VK_TAB, Shortcut.DIRECT));
+                tr("Mark element done"), KeyEvent.VK_CLOSE_BRACKET, Shortcut.DIRECT));
 
         createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
-                selectButton, addButton, markButton
+                selectButton, addButton, passButton, markButton
         }));
     }
 
@@ -126,6 +133,33 @@ public class TodoDialog extends ToggleDialog {
         }
     }
 
+    private class PassAction extends AbstractAction implements ListSelectionListener {
+        private final TodoListModel model;
+
+        public PassAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Pass"));
+            putValue(SHORT_DESCRIPTION,  tr("Moves on to the next item but leaves this item in the todo list. ([)"));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
+            updateEnabledState();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.incrementSelection();
+            selectAndZoom(model.getSelected());
+        }
+
+        public void updateEnabledState() {
+            setEnabled(model.getSize() > 0);
+        }
+
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            updateEnabledState();
+        }
+    }
+
     private class AddAction extends AbstractAction implements SelectionChangedListener {
         private final TodoListModel model;
 
@@ -166,7 +200,7 @@ public class TodoDialog extends ToggleDialog {
         public MarkAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item as done."));
+            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item as done. (])"));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","check"));
             updateEnabledState();
         }
