@@ -86,9 +86,9 @@ public class TodoDialog extends ToggleDialog {
 
 		public SelectAction(TodoListModel model) {
 			this.model = model;
-	        putValue(NAME, tr("Select"));
-	        putValue(SHORT_DESCRIPTION,  tr("Set the selected elements on the map to the selected items in the list above."));
-	        putValue(SMALL_ICON, ImageProvider.get("dialogs","select"));
+	        putValue(NAME, tr("Zoom"));
+	        putValue(SHORT_DESCRIPTION,  tr("Select and zoom to the selected item"));
+	        putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
 	        updateEnabledState();
 	    }
 
