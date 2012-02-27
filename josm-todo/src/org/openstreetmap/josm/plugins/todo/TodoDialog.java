@@ -202,6 +202,42 @@ public class TodoDialog extends ToggleDialog {
 
     }
 
+    private class UnmarkAllAction extends AbstractAction {
+
+        TodoListModel model;
+
+        public UnmarkAllAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Unmark all"));
+            putValue(SHORT_DESCRIPTION,  tr("Unark all items in the list that have been marked as done."));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","refresh"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            model.unmarkAll();
+        }
+
+    }
+
+    private class ClearAction extends AbstractAction {
+
+        TodoListModel model;
+
+        public ClearAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Clear the todo list"));
+            putValue(SHORT_DESCRIPTION,  tr("Remove all items from the todo list"));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","remove"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            model.clear();
+        }
+
+    }
+
     /**
      * Responds to double clicks on the list of selected objects
      */
@@ -236,6 +272,10 @@ public class TodoDialog extends ToggleDialog {
             add(new SelectAction(model));
             add(new MarkAction(model));
             add(new MarkAllAction(model));
+            addSeparator();
+            add(new UnmarkAllAction(model));
+            add(new ClearAction(model));
+
         }
     }
 }

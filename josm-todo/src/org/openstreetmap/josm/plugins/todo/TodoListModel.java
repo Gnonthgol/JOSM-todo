@@ -11,6 +11,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 public class TodoListModel extends AbstractListModel {
 
     private final ArrayList<OsmPrimitive> todoList = new ArrayList<OsmPrimitive>();
+    private final ArrayList<OsmPrimitive> doneList = new ArrayList<OsmPrimitive>();
     private final DefaultListSelectionModel selectionModel;
 
     public TodoListModel(DefaultListSelectionModel selectionModel) {
@@ -27,12 +28,17 @@ public class TodoListModel extends AbstractListModel {
         return todoList.size();
     }
 
+    public int getDoneSize() {
+        return doneList.size();
+    }
+
     public OsmPrimitive getSelected() {
         if (getSize() == 0 || selectionModel.isSelectionEmpty()) return null;
         return todoList.get(selectionModel.getMinSelectionIndex());
     }
 
     public void addItems(Collection<OsmPrimitive> items) {
+        doneList.removeAll(items);
         int size = getSize();
         if (size == 0) {
             todoList.addAll(items);
@@ -50,7 +56,7 @@ public class TodoListModel extends AbstractListModel {
 
     public void markSelected() {
         int sel = selectionModel.getMaxSelectionIndex();
-        todoList.remove(sel);
+        doneList.add(todoList.remove(sel));
         super.fireIntervalRemoved(this, sel, sel);
         if (sel == getSize()) sel = 0;
         selectionModel.setSelectionInterval(sel, sel);
@@ -64,8 +70,23 @@ public class TodoListModel extends AbstractListModel {
 
     public void markAll() {
         int size = getSize();
+        doneList.addAll(todoList);
         todoList.clear();
         super.fireIntervalRemoved(this, 0, size);
+    }
+
+    public void clear() {
+        int size = getSize();
+        doneList.clear();
+        todoList.clear();
+        super.fireIntervalRemoved(this, 0, size);
+    }
+
+    public void unmarkAll() {
+        int size = getSize();
+        todoList.addAll(doneList);
+        doneList.clear();
+        super.fireIntervalAdded(this, size, getSize());
     }
 
 }
