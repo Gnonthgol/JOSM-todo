@@ -53,6 +53,8 @@ public class TodoDialog extends ToggleDialog {
         MarkAction actMark;
         final SideButton markButton = new SideButton(actMark = new MarkAction(model));
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
+        Main.registerActionShortcut(actMark, Shortcut.registerShortcut("subwindow:todo:mark",
+        		tr("Mark element done"), KeyEvent.VK_TAB, Shortcut.DIRECT));
 
         createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
             selectButton, addButton, markButton
@@ -111,7 +113,6 @@ public class TodoDialog extends ToggleDialog {
 	        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
 	        Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
 	        model.addItems(sel);
-	        System.out.printf("Added %d elements there are now %d elements todo%n", sel.size(), model.getSize());
 	    }
 	}
 	
