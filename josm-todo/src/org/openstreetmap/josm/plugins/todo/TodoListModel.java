@@ -32,17 +32,23 @@ public class TodoListModel extends AbstractListModel {
 
 	public OsmPrimitive getSelected() {
 		if (getSize() == 0 || selectionModel.isSelectionEmpty()) return null;
-		return todoList.get(selectionModel.getMaxSelectionIndex());
+		return todoList.get(selectionModel.getMinSelectionIndex());
 	}
 
 	public void addItems(Collection<OsmPrimitive> items) {
-		int size = getSize();
-		todoList.ensureCapacity(size + items.size());
-		for (OsmPrimitive item: items) {
-			if (!todoList.contains(item))
-				todoList.add(item);
-		}
-		super.fireIntervalAdded(this, size, getSize());
+	    int size = getSize();
+	    if (size == 0) {
+	        todoList.addAll(items);
+	        super.fireIntervalAdded(this, 0, getSize());
+	        selectionModel.setSelectionInterval(0, 0);
+	    } else {
+	        todoList.ensureCapacity(size + items.size());
+	        for (OsmPrimitive item: items) {
+	            if (!todoList.contains(item))
+	                todoList.add(item);
+	        }
+	        super.fireIntervalAdded(this, size, getSize());
+	    }
 	}
 
 	public void removeSelected() {
