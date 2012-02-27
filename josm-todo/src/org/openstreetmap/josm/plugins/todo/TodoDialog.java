@@ -98,6 +98,13 @@ public class TodoDialog extends ToggleDialog {
         AutoScaleAction.autoScale("selection");
     }
 
+    protected static void selectAndZoom(Collection<OsmPrimitive> object) {
+        if (object == null) return;
+        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
+        Main.map.mapView.getEditLayer().data.setSelected(object);
+        AutoScaleAction.autoScale("selection");
+    }
+
     protected void updateTitle() {
         setTitle(model.getSummary());
     }
@@ -125,6 +132,32 @@ public class TodoDialog extends ToggleDialog {
 
         public void updateEnabledState() {
             setEnabled(model.getSelected() != null);
+        }
+
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            updateEnabledState();
+        }
+    }
+
+    private class SelectUnmarkedAction extends AbstractAction implements ListSelectionListener {
+        private final TodoListModel model;
+
+        public SelectUnmarkedAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Select all Unmarked and Zoom"));
+            putValue(SHORT_DESCRIPTION,  tr("Select and zoom to all of the unmarked items"));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
+            updateEnabledState();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            selectAndZoom(model.getTodoList());
+        }
+
+        public void updateEnabledState() {
+            setEnabled(model.getSize() > 0);
         }
 
         @Override
@@ -317,6 +350,8 @@ public class TodoDialog extends ToggleDialog {
             addSeparator();
             add(new UnmarkAllAction(model));
             add(new ClearAction(model));
+            addSeparator();
+            add(new SelectUnmarkedAction(model));
 
         }
     }

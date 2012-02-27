@@ -39,6 +39,10 @@ public class TodoListModel extends AbstractListModel {
         return todoList.get(selectionModel.getMinSelectionIndex());
     }
 
+    public ArrayList<OsmPrimitive> getTodoList() {
+        return todoList;
+    }
+
     public void incrementSelection() {
 	int idx;
 	if(getSize() == 0) return;
