@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JList;
@@ -24,12 +25,15 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
+import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 
 public class TodoDialog extends ToggleDialog {
 
 	private static final long serialVersionUID = 3590739974800809827L;
 	private TodoListModel model;
 	private JList lstPrimitives;
+	private TodoPopup popupMenu;
 
 	/**
      * Builds the content panel for this dialog
@@ -72,6 +76,9 @@ public class TodoDialog extends ToggleDialog {
 		buildContentPanel();
 		
 		lstPrimitives.addMouseListener(new DblClickHandler());
+		lstPrimitives.addMouseListener(new TodoPopupLauncher());
+
+		popupMenu = new TodoPopup(lstPrimitives);
 	}
 
 	protected static void selectAndZoom(OsmPrimitive object) {
@@ -162,4 +169,31 @@ public class TodoDialog extends ToggleDialog {
 			selectAndZoom(model.getSelected());
 		}
 	}
+
+    /**
+      * The popup menu launcher.
+      */
+    class TodoPopupLauncher extends PopupMenuLauncher {
+        @Override
+        public void launch(MouseEvent evt) {
+            //if(model.getSelected().isEmpty()) {
+            //int idx = lstPrimitives.locationToIndex(evt.getPoint());
+            //if(idx < 0)  return;
+            //model.setSelected(Collections.singleton((OsmPrimitive)model.getElementAt(idx)));
+            //}
+
+            popupMenu.show(lstPrimitives, evt.getX(), evt.getY());
+        }
+    }
+
+    /**
+      * A right-click popup context menu for setting options and performing other functions on the todo list items.
+      */
+    class TodoPopup extends ListPopupMenu {
+        public TodoPopup(JList list) {
+            super(list);
+            add(new SelectAction(model));
+            add(new MarkAction(model));
+        }
+    }
 }
