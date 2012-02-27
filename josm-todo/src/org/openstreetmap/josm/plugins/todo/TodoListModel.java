@@ -48,7 +48,7 @@ public class TodoListModel extends AbstractListModel {
         }
     }
 
-    public void removeSelected() {
+    public void markSelected() {
         int sel = selectionModel.getMaxSelectionIndex();
         todoList.remove(sel);
         super.fireIntervalRemoved(this, sel, sel);
@@ -60,6 +60,12 @@ public class TodoListModel extends AbstractListModel {
         int sel = todoList.indexOf(element);
         if (sel == -1) return;
         selectionModel.setSelectionInterval(sel, sel);
+    }
+
+    public void markAll() {
+        int size = getSize();
+        todoList.clear();
+        super.fireIntervalRemoved(this, 0, size);
     }
 
 }

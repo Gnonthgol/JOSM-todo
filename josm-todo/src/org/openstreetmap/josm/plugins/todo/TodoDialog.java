@@ -168,7 +168,36 @@ public class TodoDialog extends ToggleDialog {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            model.removeSelected();
+            model.markSelected();
+            selectAndZoom(model.getSelected());
+        }
+
+        public void updateEnabledState() {
+            setEnabled(model.getSelected() != null);
+        }
+
+        @Override
+        public void valueChanged(ListSelectionEvent arg0) {
+            updateEnabledState();
+        }
+
+    }
+
+    private class MarkAllAction extends AbstractAction implements ListSelectionListener {
+
+        TodoListModel model;
+
+        public MarkAllAction(TodoListModel model) {
+            this.model = model;
+            putValue(NAME, tr("Mark all"));
+            putValue(SHORT_DESCRIPTION,  tr("Mark all items in the list as done."));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","todo"));
+            updateEnabledState();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            model.markAll();
             selectAndZoom(model.getSelected());
         }
 
@@ -216,6 +245,7 @@ public class TodoDialog extends ToggleDialog {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
+            add(new MarkAllAction(model));
         }
     }
 }
