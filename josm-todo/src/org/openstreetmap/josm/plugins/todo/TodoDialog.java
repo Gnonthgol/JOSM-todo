@@ -18,7 +18,10 @@ import javax.swing.event.ListSelectionListener;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.AutoScaleAction;
+import org.openstreetmap.josm.data.SelectionChangedListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
+import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.gui.OsmPrimitivRenderer;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
@@ -30,6 +33,7 @@ public class TodoDialog extends ToggleDialog {
 	private static final long serialVersionUID = 3590739974800809827L;
 	private TodoListModel model;
 	private JList lstPrimitives;
+	private AddAction actAdd;
 
 	/**
      * Builds the content panel for this dialog
@@ -49,7 +53,6 @@ public class TodoDialog extends ToggleDialog {
         lstPrimitives.getSelectionModel().addListSelectionListener(actSelect);
 
 		// the add button
-        AddAction actAdd;
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
         
         // the mark button
@@ -81,6 +84,11 @@ public class TodoDialog extends ToggleDialog {
         AutoScaleAction.autoScale("selection");
 	}
 	
+	@Override
+	public void showNotify() {
+		SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
+	}
+		        
 	private class SelectAction extends AbstractAction implements ListSelectionListener {
 	    private TodoListModel model;
 
@@ -105,7 +113,7 @@ public class TodoDialog extends ToggleDialog {
 	    }
 	}
 	
-	private class AddAction extends AbstractAction {
+	private class AddAction extends AbstractAction implements SelectionChangedListener {
 	    private TodoListModel model;
 
 		public AddAction(TodoListModel model) {
@@ -113,7 +121,7 @@ public class TodoDialog extends ToggleDialog {
 	        putValue(NAME, tr("Add"));
 	        putValue(SHORT_DESCRIPTION,  tr("Add the selected items to the todo list."));
 	        putValue(SMALL_ICON, ImageProvider.get("dialogs","add"));
-	        setEnabled(true);
+	        updateEnabledState();
 	    }
 
 	    public void actionPerformed(ActionEvent e) {
@@ -121,6 +129,19 @@ public class TodoDialog extends ToggleDialog {
 	        Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
 	        model.addItems(sel);
 	    }
+
+	    public void updateEnabledState() {
+	    	if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+	    		setEnabled(false);
+	    	} else {
+	    		setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+	    	}
+	    }
+	    
+		@Override
+		public void selectionChanged(Collection<? extends OsmPrimitive> arg) {
+			updateEnabledState();
+		}
 	}
 	
 	private class MarkAction extends AbstractAction implements ListSelectionListener {
