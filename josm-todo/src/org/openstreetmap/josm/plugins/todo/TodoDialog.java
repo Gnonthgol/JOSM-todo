@@ -15,6 +15,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.AutoScaleAction;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.OsmPrimitivRenderer;
 import org.openstreetmap.josm.gui.SideButton;
@@ -47,9 +48,14 @@ public class TodoDialog extends ToggleDialog {
 		// the add button
         AddAction actAdd;
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
+        
+        // the mark button
+        MarkAction actMark;
+        final SideButton markButton = new SideButton(actMark = new MarkAction(model));
+        lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
 
         createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
-            selectButton, addButton
+            selectButton, addButton, markButton
         }));
     }
 
@@ -78,6 +84,7 @@ public class TodoDialog extends ToggleDialog {
 	        if (sel == null) return;
 	        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
 	        Main.map.mapView.getEditLayer().data.setSelected(sel);
+	        AutoScaleAction.autoScale("selection");
 	    }
 
 	    public void updateEnabledState() {
@@ -106,5 +113,38 @@ public class TodoDialog extends ToggleDialog {
 	        model.addItems(sel);
 	        System.out.printf("Added %d elements there are now %d elements todo%n", sel.size(), model.getSize());
 	    }
+	}
+	
+	private class MarkAction extends AbstractAction implements ListSelectionListener {
+
+		TodoListModel model;
+		
+		public MarkAction(TodoListModel model) {
+			this.model = model;
+			putValue(NAME, tr("Mark"));
+	        putValue(SHORT_DESCRIPTION,  tr("Mark the selected item as done."));
+	        putValue(SMALL_ICON, ImageProvider.get("dialogs","check"));
+	        updateEnabledState();
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			model.removeSelected();
+			OsmPrimitive sel = model.getSelected();
+	        if (sel == null) return;
+	        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
+	        Main.map.mapView.getEditLayer().data.setSelected(sel);
+	        AutoScaleAction.autoScale("selection");
+		}
+
+		public void updateEnabledState() {
+	        setEnabled(model.getSelected() != null);
+	    }
+		
+		@Override
+		public void valueChanged(ListSelectionEvent arg0) {
+			updateEnabledState();
+		}
+		
 	}
 }
