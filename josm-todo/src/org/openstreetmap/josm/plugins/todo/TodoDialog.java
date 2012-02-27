@@ -122,7 +122,7 @@ public class TodoDialog extends ToggleDialog {
         public SelectAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Zoom"));
-            putValue(SHORT_DESCRIPTION,  tr("Select and zoom to the selected item"));
+            putValue(SHORT_DESCRIPTION,  tr("Zoom to the selected item in the todo list."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
             updateEnabledState();
         }
@@ -148,7 +148,7 @@ public class TodoDialog extends ToggleDialog {
         public SelectUnmarkedAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Select all Unmarked and Zoom"));
-            putValue(SHORT_DESCRIPTION,  tr("Select and zoom to all of the unmarked items"));
+            putValue(SHORT_DESCRIPTION,  tr("Select and zoom to all of the unmarked items in the todo list."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
             updateEnabledState();
         }
@@ -174,7 +174,7 @@ public class TodoDialog extends ToggleDialog {
         public PassAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Pass"));
-            putValue(SHORT_DESCRIPTION,  tr("Moves on to the next item but leaves this item in the todo list. ([)"));
+            putValue(SHORT_DESCRIPTION,  tr("Moves on to the next item but leaves this item in the todo list. ([)."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
             updateEnabledState();
         }
@@ -234,7 +234,7 @@ public class TodoDialog extends ToggleDialog {
         public MarkSelectedAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark selected"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected items as done."));
+            putValue(SHORT_DESCRIPTION,  tr("Mark the selected items (on the map) as done in the todo list."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","select"));
             updateEnabledState();
         }
@@ -268,7 +268,7 @@ public class TodoDialog extends ToggleDialog {
         public MarkAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item in the list as done. (])"));
+            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item in the todo list as done. (])."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","check"));
             updateEnabledState();
         }
@@ -298,7 +298,7 @@ public class TodoDialog extends ToggleDialog {
         public MarkAllAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark all"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark all items in the list as done."));
+            putValue(SHORT_DESCRIPTION,  tr("Mark all items in the todo list as done."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","todo"));
         }
 
@@ -318,7 +318,7 @@ public class TodoDialog extends ToggleDialog {
         public UnmarkAllAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Unmark all"));
-            putValue(SHORT_DESCRIPTION,  tr("Unark all items in the list that have been marked as done."));
+            putValue(SHORT_DESCRIPTION,  tr("Unmark all items in the todo list that have been marked as done."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","refresh"));
         }
 
@@ -337,7 +337,7 @@ public class TodoDialog extends ToggleDialog {
         public ClearAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Clear the todo list"));
-            putValue(SHORT_DESCRIPTION,  tr("Remove all items from the todo list"));
+            putValue(SHORT_DESCRIPTION,  tr("Remove all items (marked and unmarked) from the todo list."));
             putValue(SMALL_ICON, ImageProvider.get("dialogs","remove"));
         }
 
@@ -381,12 +381,12 @@ public class TodoDialog extends ToggleDialog {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
-            add(actMarkSelected = new MarkSelectedAction(model));
-            add(new MarkAllAction(model));
             addSeparator();
+            add(new MarkAllAction(model));
             add(new UnmarkAllAction(model));
             add(new ClearAction(model));
             addSeparator();
+            add(actMarkSelected = new MarkSelectedAction(model));
             add(new SelectUnmarkedAction(model));
 
         }
