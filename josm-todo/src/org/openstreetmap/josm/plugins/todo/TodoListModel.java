@@ -101,11 +101,21 @@ public class TodoListModel extends AbstractListModel {
         if (items == null || items.size() == 0) return;
         int size = getSize();
         if (size == 0) return;
+
+        int sel = selectionModel.getMinSelectionIndex();
+
         for (OsmPrimitive item: items) {
-            if (todoList.remove(item))
+            int i;
+            if ((i = todoList.indexOf(item)) != -1) {
+                todoList.remove(i);
                 doneList.add(item);
+                if (sel > i) sel--;
+            }
         }
+        if (sel >= getSize())
+            sel = 0;
         super.fireIntervalRemoved(this, 0, size-1);
+        selectionModel.setSelectionInterval(sel, sel);
     }
 
     public void clear() {
