@@ -59,6 +59,7 @@ public class TodoDialog extends ToggleDialog {
 
         // the add button
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
+        actAdd.updateEnabledState();
 
         // the pass button
         PassAction actPass;
