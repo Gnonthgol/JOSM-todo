@@ -219,10 +219,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         public void updateEnabledState() {
             if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
-                System.out.println("No edit layer");
                 setEnabled(false);
             } else {
-                System.out.println("Edit layer found with selection " + !Main.map.mapView.getEditLayer().data.selectionEmpty());
                 setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
             }
         }
