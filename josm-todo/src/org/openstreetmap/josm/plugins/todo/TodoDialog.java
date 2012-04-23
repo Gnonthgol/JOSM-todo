@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -31,7 +33,7 @@ import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 
-public class TodoDialog extends ToggleDialog {
+public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
     private static final long serialVersionUID = 3590739974800809827L;
     private TodoListModel model;
@@ -59,7 +61,6 @@ public class TodoDialog extends ToggleDialog {
 
         // the add button
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
-        actAdd.updateEnabledState();
 
         // the pass button
         PassAction actPass;
@@ -89,6 +90,7 @@ public class TodoDialog extends ToggleDialog {
 
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
+        this.toggleAction.addPropertyChangeListener(this);
 
         popupMenu = new TodoPopup(lstPrimitives);
     }
@@ -217,8 +219,10 @@ public class TodoDialog extends ToggleDialog {
 
         public void updateEnabledState() {
             if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+                System.out.println("No edit layer");
                 setEnabled(false);
             } else {
+                System.out.println("Edit layer found with selection " + !Main.map.mapView.getEditLayer().data.selectionEmpty());
                 setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
             }
         }
@@ -391,5 +395,10 @@ public class TodoDialog extends ToggleDialog {
             add(new SelectUnmarkedAction(model));
 
         }
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent arg0) {
+        actAdd.updateEnabledState();
     }
 }
