@@ -112,14 +112,18 @@
     **********************************************************
     -->
     <target name="revision">
+    	<!--
         <exec append="false" output="REVISION" executable="svn" failifexecutionfails="false">
             <env key="LANG" value="C"/>
             <arg value="info"/>
-            <arg value="--xml"/>
+            <arg value="- -xml"/>
             <arg value="."/>
         </exec>
         <xmlproperty file="REVISION" prefix="version" keepRoot="false" collapseAttributes="true"/>
         <delete file="REVISION"/>
+        -->
+        <property name="version.entry.commit.revision" value="29154"/>
+        <property name="version.entry.commit.date" value="2013-01-02T01:43:36.326536Z"/>
     </target>
     <!--
     **********************************************************
