@@ -59,6 +59,7 @@ public class TodoDialog extends ToggleDialog {
 
         // the add button
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
+	actAdd.updateEnabledState();
 
         // the pass button
         PassAction actPass;
@@ -338,7 +339,7 @@ public class TodoDialog extends ToggleDialog {
             this.model = model;
             putValue(NAME, tr("Clear the todo list"));
             putValue(SHORT_DESCRIPTION,  tr("Remove all items (marked and unmarked) from the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","remove"));
+            putValue(SMALL_ICON, ImageProvider.get("dialogs","delete"));
         }
 
         @Override
