@@ -118,6 +118,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     public void showNotify() {
         SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
         SelectionEventManager.getInstance().addSelectionListener(actMarkSelected, FireMode.IN_EDT_CONSOLIDATED);
+        actAdd.updateEnabledState();
     }
 
     private class SelectAction extends AbstractAction implements ListSelectionListener {
