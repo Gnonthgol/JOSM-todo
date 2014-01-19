@@ -40,7 +40,11 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     private JList lstPrimitives;
     private final TodoPopup popupMenu;
     private AddAction actAdd;
+    private PassAction actPass;
+    private MarkAction actMark;
     private MarkSelectedAction actMarkSelected;
+    private Shortcut sctPass;
+    private Shortcut sctMark;
 
     /**
      * Builds the content panel for this dialog
@@ -61,20 +65,18 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         // the add button
         final SideButton addButton = new SideButton(actAdd = new AddAction(model));
-	actAdd.updateEnabledState();
+        actAdd.updateEnabledState();
 
         // the pass button
-        PassAction actPass;
         final SideButton passButton = new SideButton(actPass = new PassAction(model));
         lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
-        Main.registerActionShortcut(actPass, Shortcut.registerShortcut("subwindow:todo:pass",
+        Main.registerActionShortcut(actPass, sctPass = Shortcut.registerShortcut("subwindow:todo:pass",
                 tr("Pass over element without marking it"), KeyEvent.VK_OPEN_BRACKET, Shortcut.DIRECT));
 
         // the mark button
-        MarkAction actMark;
         final SideButton markButton = new SideButton(actMark = new MarkAction(model));
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
-        Main.registerActionShortcut(actMark, Shortcut.registerShortcut("subwindow:todo:mark",
+        Main.registerActionShortcut(actMark, sctMark = Shortcut.registerShortcut("subwindow:todo:mark",
                 tr("Mark element done"), KeyEvent.VK_CLOSE_BRACKET, Shortcut.DIRECT));
 
         createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
@@ -91,22 +93,22 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
-        this.toggleAction.addPropertyChangeListener(this);
+        toggleAction.addPropertyChangeListener(this);
 
         popupMenu = new TodoPopup(lstPrimitives);
     }
 
     protected static void selectAndZoom(OsmPrimitive object) {
         if (object == null) return;
-        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-        Main.map.mapView.getEditLayer().data.setSelected(object);
+        if (Main.main.getEditLayer() == null) return;
+        Main.main.getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
     protected static void selectAndZoom(Collection<OsmPrimitive> object) {
         if (object == null) return;
-        if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-        Main.map.mapView.getEditLayer().data.setSelected(object);
+        if (Main.main.getEditLayer() == null) return;
+        Main.main.getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
@@ -400,5 +402,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
         actAdd.updateEnabledState();
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        Main.unregisterActionShortcut(actPass, sctPass);
+        Main.unregisterActionShortcut(actMark, sctMark);
     }
 }
