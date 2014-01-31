@@ -14,10 +14,11 @@ public class TodoPlugin extends Plugin {
 
     @Override
     public void mapFrameInitialized(MapFrame oldFrame, MapFrame newFrame) {
-        if(newFrame != null && newFrame.mapView != null) {
-            if (todoDialog == null)
-                todoDialog = new TodoDialog();
+        if (newFrame != null && newFrame.mapView != null) {
+            todoDialog = new TodoDialog();
             newFrame.addToggleDialog(todoDialog);
+        } else if (newFrame == null) {
+            todoDialog = null;
         }
     }
 }
