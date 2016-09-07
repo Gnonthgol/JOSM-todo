@@ -37,7 +37,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
     private static final long serialVersionUID = 3590739974800809827L;
     private TodoListModel model;
-    private JList lstPrimitives;
+    private JList<OsmPrimitive> lstPrimitives;
     private final TodoPopup popupMenu;
     private AddAction actAdd;
     private PassAction actPass;
@@ -52,7 +52,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     protected void buildContentPanel() {
         DefaultListSelectionModel selectionModel  = new DefaultListSelectionModel();
         model = new TodoListModel(selectionModel);
-        lstPrimitives = new JList(model);
+        lstPrimitives = new JList<>(model);
         lstPrimitives.setSelectionModel(selectionModel);
         lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
@@ -100,15 +100,15 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
     protected static void selectAndZoom(OsmPrimitive object) {
         if (object == null) return;
-        if (Main.main.getEditLayer() == null) return;
-        Main.main.getEditLayer().data.setSelected(object);
+        if (Main.getLayerManager().getEditLayer() == null) return;
+        Main.getLayerManager().getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
     protected static void selectAndZoom(Collection<OsmPrimitive> object) {
         if (object == null) return;
-        if (Main.main.getEditLayer() == null) return;
-        Main.main.getEditLayer().data.setSelected(object);
+        if (Main.getLayerManager().getEditLayer() == null) return;
+        Main.getLayerManager().getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
@@ -215,17 +215,17 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-            Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
+            if (Main.getLayerManager().getEditLayer() == null) return;
+            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
             model.addItems(sel);
             updateTitle();
         }
 
         public void updateEnabledState() {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+            if (Main.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
@@ -248,17 +248,17 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-            Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
+            if (Main.getLayerManager().getEditLayer() == null) return;
+            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
             model.markItems(sel);
             updateTitle();
         }
 
         public void updateEnabledState() {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+            if (Main.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
