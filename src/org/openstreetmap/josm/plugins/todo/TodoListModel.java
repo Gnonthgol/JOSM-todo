@@ -10,7 +10,7 @@ import javax.swing.DefaultListSelectionModel;
 
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
-public class TodoListModel extends AbstractListModel {
+public class TodoListModel extends AbstractListModel<OsmPrimitive> {
 
     private final ArrayList<OsmPrimitive> todoList = new ArrayList<OsmPrimitive>();
     private final ArrayList<OsmPrimitive> doneList = new ArrayList<OsmPrimitive>();
@@ -21,7 +21,7 @@ public class TodoListModel extends AbstractListModel {
     }
 
     @Override
-    public Object getElementAt(int index) {
+    public OsmPrimitive getElementAt(int index) {
         return todoList.get(index);
     }
 
