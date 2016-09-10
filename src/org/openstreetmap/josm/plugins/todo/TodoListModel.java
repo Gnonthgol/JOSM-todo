@@ -13,8 +13,8 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
 public class TodoListModel extends AbstractListModel<OsmPrimitive> {
 
-    private final ArrayList<OsmPrimitive> todoList = new ArrayList<OsmPrimitive>();
-    private final ArrayList<OsmPrimitive> doneList = new ArrayList<OsmPrimitive>();
+    private final ArrayList<OsmPrimitive> todoList = new ArrayList<>();
+    private final ArrayList<OsmPrimitive> doneList = new ArrayList<>();
     private final DefaultListSelectionModel selectionModel;
 
     public TodoListModel(DefaultListSelectionModel selectionModel) {

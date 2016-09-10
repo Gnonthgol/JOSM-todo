@@ -381,7 +381,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
      * A right-click popup context menu for setting options and performing other functions on the todo list items.
      */
     class TodoPopup extends ListPopupMenu {
-        TodoPopup(JList list) {
+        TodoPopup(JList<OsmPrimitive> list) {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
