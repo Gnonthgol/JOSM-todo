@@ -1,3 +1,4 @@
+// License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.todo;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -45,13 +46,13 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
 
     public void incrementSelection() {
         int idx;
-        if(getSize() == 0) return;
+        if (getSize() == 0) return;
         if (selectionModel.isSelectionEmpty())
             idx = 0;
         else
             idx = selectionModel.getMinSelectionIndex() + 1;
 
-        if(idx > getSize()-1)  idx = getSize()-1;
+        if (idx > getSize()-1) idx = getSize()-1;
 
         selectionModel.setSelectionInterval(idx, idx);
     }
