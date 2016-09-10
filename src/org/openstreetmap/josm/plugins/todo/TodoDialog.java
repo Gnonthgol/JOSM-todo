@@ -123,7 +123,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         actAdd.updateEnabledState();
     }
 
-    private class SelectAction extends AbstractAction implements ListSelectionListener {
+    private static class SelectAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
         SelectAction(TodoListModel model) {
@@ -149,7 +149,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
     }
 
-    private class SelectUnmarkedAction extends AbstractAction implements ListSelectionListener {
+    private static class SelectUnmarkedAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
         SelectUnmarkedAction(TodoListModel model) {
@@ -175,7 +175,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
     }
 
-    private class PassAction extends AbstractAction implements ListSelectionListener {
+    private static class PassAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
         PassAction(TodoListModel model) {
