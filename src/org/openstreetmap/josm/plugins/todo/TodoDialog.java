@@ -95,8 +95,11 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
         Main.registerActionShortcut(actMark, sctMark);
 
+        // the mark from map button
+        SideButton markSelectedButton = new SideButton(actMarkSelected);
+
         createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
-                selectButton, addButton, passButton, markButton
+                selectButton, addButton, passButton, markButton, markSelectedButton
         }));
     }
 
