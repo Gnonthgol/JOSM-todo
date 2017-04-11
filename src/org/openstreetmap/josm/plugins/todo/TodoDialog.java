@@ -41,11 +41,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     private final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel();
     private final TodoListModel model = new TodoListModel(selectionModel);
     private final JList<OsmPrimitive> lstPrimitives = new JList<>(model);
-    private final TodoPopup popupMenu = new TodoPopup(lstPrimitives);
     private final AddAction actAdd = new AddAction(model);
     private final PassAction actPass = new PassAction(model);
     private final MarkAction actMark = new MarkAction(model);
     private final MarkSelectedAction actMarkSelected = new MarkSelectedAction(model);
+    /* The popup must be created AFTER actions */
+    private final TodoPopup popupMenu = new TodoPopup(lstPrimitives);
 
     // CHECKSTYLE.OFF: LineLength
     private final Shortcut sctPass = Shortcut.registerShortcut("subwindow:todo:pass", tr("Pass over element without marking it"), KeyEvent.VK_OPEN_BRACKET, Shortcut.DIRECT);
