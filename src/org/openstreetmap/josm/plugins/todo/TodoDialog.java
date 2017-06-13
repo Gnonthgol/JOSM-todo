@@ -132,7 +132,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Zoom"));
             putValue(SHORT_DESCRIPTION, tr("Zoom to the selected item in the todo list."));
-            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -158,7 +158,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Select all Unmarked and Zoom"));
             putValue(SHORT_DESCRIPTION, tr("Select and zoom to all of the unmarked items in the todo list."));
-            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -184,7 +184,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Pass"));
             putValue(SHORT_DESCRIPTION, tr("Moves on to the next item but leaves this item in the todo list. ([)."));
-            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -211,7 +211,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Add"));
             putValue(SHORT_DESCRIPTION, tr("Add the selected items to the todo list."));
-            new ImageProvider("dialogs", "add").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "add").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -245,7 +245,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Mark selected"));
             putValue(SHORT_DESCRIPTION, tr("Mark the selected items (on the map) as done in the todo list."));
-            new ImageProvider("dialogs", "select").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "select").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -280,7 +280,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Mark"));
             putValue(SHORT_DESCRIPTION, tr("Mark the selected item in the todo list as done. (])."));
-            new ImageProvider("dialogs", "check").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "check").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -309,7 +309,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Mark all"));
             putValue(SHORT_DESCRIPTION, tr("Mark all items in the todo list as done."));
-            new ImageProvider("dialogs", "todo").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "todo").getResource().attachImageIcon(this, true);
         }
 
         @Override
@@ -329,7 +329,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Unmark all"));
             putValue(SHORT_DESCRIPTION, tr("Unmark all items in the todo list that have been marked as done."));
-            new ImageProvider("dialogs", "refresh").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "refresh").getResource().attachImageIcon(this, true);
         }
 
         @Override
@@ -347,7 +347,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             this.model = model;
             putValue(NAME, tr("Clear the todo list"));
             putValue(SHORT_DESCRIPTION, tr("Remove all items (marked and unmarked) from the todo list."));
-            new ImageProvider("dialogs", "delete").getResource().attachImageIcon(this);
+            new ImageProvider("dialogs", "delete").getResource().attachImageIcon(this, true);
         }
 
         @Override
