@@ -1,3 +1,4 @@
+// License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.todo;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -36,55 +37,25 @@ import org.openstreetmap.josm.tools.Shortcut;
 public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
     private static final long serialVersionUID = 3590739974800809827L;
-    private TodoListModel model;
-    private JList lstPrimitives;
-    private final TodoPopup popupMenu;
-    private AddAction actAdd;
-    private PassAction actPass;
-    private MarkAction actMark;
-    private MarkSelectedAction actMarkSelected;
-    private Shortcut sctPass;
-    private Shortcut sctMark;
+
+    private final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel();
+    private final TodoListModel model = new TodoListModel(selectionModel);
+    private final JList<OsmPrimitive> lstPrimitives = new JList<>(model);
+    private final AddAction actAdd = new AddAction(model);
+    private final PassAction actPass = new PassAction(model);
+    private final MarkAction actMark = new MarkAction(model);
+    private final MarkSelectedAction actMarkSelected = new MarkSelectedAction(model);
+    /* The popup must be created AFTER actions */
+    private final TodoPopup popupMenu = new TodoPopup(lstPrimitives);
+
+    // CHECKSTYLE.OFF: LineLength
+    private final Shortcut sctPass = Shortcut.registerShortcut("subwindow:todo:pass", tr("Pass over element without marking it"), KeyEvent.VK_OPEN_BRACKET, Shortcut.DIRECT);
+    private final Shortcut sctMark = Shortcut.registerShortcut("subwindow:todo:mark", tr("Mark element done"), KeyEvent.VK_CLOSE_BRACKET, Shortcut.DIRECT);
+    // CHECKSTYLE.ON: LineLength
 
     /**
-     * Builds the content panel for this dialog
+     * Constructs a new {@code TodoDialog}.
      */
-    protected void buildContentPanel() {
-        DefaultListSelectionModel selectionModel  = new DefaultListSelectionModel();
-        model = new TodoListModel(selectionModel);
-        lstPrimitives = new JList(model);
-        lstPrimitives.setSelectionModel(selectionModel);
-        lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
-        lstPrimitives.setTransferHandler(null);
-
-        // the select action
-        SelectAction actSelect;
-        final SideButton selectButton = new SideButton(actSelect = new SelectAction(model));
-        lstPrimitives.getSelectionModel().addListSelectionListener(actSelect);
-
-        // the add button
-        final SideButton addButton = new SideButton(actAdd = new AddAction(model));
-        actAdd.updateEnabledState();
-
-        // the pass button
-        final SideButton passButton = new SideButton(actPass = new PassAction(model));
-        lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
-        Main.registerActionShortcut(actPass, sctPass = Shortcut.registerShortcut("subwindow:todo:pass",
-                tr("Pass over element without marking it"), KeyEvent.VK_OPEN_BRACKET, Shortcut.DIRECT));
-
-        // the mark button
-        final SideButton markButton = new SideButton(actMark = new MarkAction(model));
-        lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
-        Main.registerActionShortcut(actMark, sctMark = Shortcut.registerShortcut("subwindow:todo:mark",
-                tr("Mark element done"), KeyEvent.VK_CLOSE_BRACKET, Shortcut.DIRECT));
-
-        createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
-                selectButton, addButton, passButton, markButton
-        }));
-    }
-
-
     public TodoDialog() {
         super(tr("Todo list"), "todo", tr("Open the todo list."),
                 Shortcut.registerShortcut("subwindow:todo", tr("Toggle: {0}", tr("Todo list")),
@@ -94,21 +65,55 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
         toggleAction.addPropertyChangeListener(this);
+    }
 
-        popupMenu = new TodoPopup(lstPrimitives);
+    /**
+     * Builds the content panel for this dialog
+     */
+    protected void buildContentPanel() {
+        lstPrimitives.setSelectionModel(selectionModel);
+        lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
+        lstPrimitives.setTransferHandler(null);
+
+        // the select action
+        SelectAction actSelect = new SelectAction(model);
+        SideButton selectButton = new SideButton(actSelect);
+        lstPrimitives.getSelectionModel().addListSelectionListener(actSelect);
+
+        // the add button
+        SideButton addButton = new SideButton(actAdd);
+        actAdd.updateEnabledState();
+
+        // the pass button
+        SideButton passButton = new SideButton(actPass);
+        lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
+        Main.registerActionShortcut(actPass, sctPass);
+
+        // the mark button
+        SideButton markButton = new SideButton(actMark);
+        lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
+        Main.registerActionShortcut(actMark, sctMark);
+
+        // the mark from map button
+        SideButton markSelectedButton = new SideButton(actMarkSelected);
+
+        createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
+                selectButton, addButton, passButton, markButton, markSelectedButton
+        }));
     }
 
     protected static void selectAndZoom(OsmPrimitive object) {
-        if (object == null) return;
-        if (Main.main.getEditLayer() == null) return;
-        Main.main.getEditLayer().data.setSelected(object);
+        if (object == null || Main.getLayerManager().getEditLayer() == null)
+            return;
+        Main.getLayerManager().getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
     protected static void selectAndZoom(Collection<OsmPrimitive> object) {
-        if (object == null) return;
-        if (Main.main.getEditLayer() == null) return;
-        Main.main.getEditLayer().data.setSelected(object);
+        if (object == null || Main.getLayerManager().getEditLayer() == null)
+            return;
+        Main.getLayerManager().getEditLayer().data.setSelected(object);
         AutoScaleAction.autoScale("selection");
     }
 
@@ -123,14 +128,14 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         actAdd.updateEnabledState();
     }
 
-    private class SelectAction extends AbstractAction implements ListSelectionListener {
+    private static class SelectAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
-        public SelectAction(TodoListModel model) {
+        SelectAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Zoom"));
-            putValue(SHORT_DESCRIPTION,  tr("Zoom to the selected item in the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
+            putValue(SHORT_DESCRIPTION, tr("Zoom to the selected item in the todo list."));
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -149,14 +154,14 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
     }
 
-    private class SelectUnmarkedAction extends AbstractAction implements ListSelectionListener {
+    private static class SelectUnmarkedAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
-        public SelectUnmarkedAction(TodoListModel model) {
+        SelectUnmarkedAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Select all Unmarked and Zoom"));
-            putValue(SHORT_DESCRIPTION,  tr("Select and zoom to all of the unmarked items in the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
+            putValue(SHORT_DESCRIPTION, tr("Select and zoom to all of the unmarked items in the todo list."));
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -175,14 +180,14 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
     }
 
-    private class PassAction extends AbstractAction implements ListSelectionListener {
+    private static class PassAction extends AbstractAction implements ListSelectionListener {
         private final TodoListModel model;
 
-        public PassAction(TodoListModel model) {
+        PassAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Pass"));
-            putValue(SHORT_DESCRIPTION,  tr("Moves on to the next item but leaves this item in the todo list. ([)."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","zoom-best-fit"));
+            putValue(SHORT_DESCRIPTION, tr("Moves on to the next item but leaves this item in the todo list. ([)."));
+            new ImageProvider("dialogs", "zoom-best-fit").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -205,27 +210,28 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     private class AddAction extends AbstractAction implements SelectionChangedListener {
         private final TodoListModel model;
 
-        public AddAction(TodoListModel model) {
+        AddAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Add"));
-            putValue(SHORT_DESCRIPTION,  tr("Add the selected items to the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","add"));
+            putValue(SHORT_DESCRIPTION, tr("Add the selected items to the todo list."));
+            new ImageProvider("dialogs", "add").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-            Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
+            if (Main.getLayerManager().getEditLayer() == null)
+                return;
+            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
             model.addItems(sel);
             updateTitle();
         }
 
         public void updateEnabledState() {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+            if (Main.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
@@ -238,27 +244,28 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     private class MarkSelectedAction extends AbstractAction implements SelectionChangedListener {
         private final TodoListModel model;
 
-        public MarkSelectedAction(TodoListModel model) {
+        MarkSelectedAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark selected"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected items (on the map) as done in the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","select"));
+            putValue(SHORT_DESCRIPTION, tr("Mark the selected items (on the map) as done in the todo list."));
+            new ImageProvider("dialogs", "select").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) return;
-            Collection<OsmPrimitive> sel = Main.map.mapView.getEditLayer().data.getSelected();
+            if (Main.getLayerManager().getEditLayer() == null)
+                return;
+            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
             model.markItems(sel);
             updateTitle();
         }
 
         public void updateEnabledState() {
-            if (Main.map == null || Main.map.mapView == null || Main.map.mapView.getEditLayer() == null) {
+            if (Main.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.map.mapView.getEditLayer().data.selectionEmpty());
+                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
@@ -272,11 +279,11 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         TodoListModel model;
 
-        public MarkAction(TodoListModel model) {
+        MarkAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark the selected item in the todo list as done. (])."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","check"));
+            putValue(SHORT_DESCRIPTION, tr("Mark the selected item in the todo list as done. (])."));
+            new ImageProvider("dialogs", "check").getResource().attachImageIcon(this, true);
             updateEnabledState();
         }
 
@@ -295,18 +302,17 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         public void valueChanged(ListSelectionEvent arg0) {
             updateEnabledState();
         }
-
     }
 
     private class MarkAllAction extends AbstractAction {
 
         TodoListModel model;
 
-        public MarkAllAction(TodoListModel model) {
+        MarkAllAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Mark all"));
-            putValue(SHORT_DESCRIPTION,  tr("Mark all items in the todo list as done."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","todo"));
+            putValue(SHORT_DESCRIPTION, tr("Mark all items in the todo list as done."));
+            new ImageProvider("dialogs", "todo").getResource().attachImageIcon(this, true);
         }
 
         @Override
@@ -322,11 +328,11 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         TodoListModel model;
 
-        public UnmarkAllAction(TodoListModel model) {
+        UnmarkAllAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Unmark all"));
-            putValue(SHORT_DESCRIPTION,  tr("Unmark all items in the todo list that have been marked as done."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","refresh"));
+            putValue(SHORT_DESCRIPTION, tr("Unmark all items in the todo list that have been marked as done."));
+            new ImageProvider("dialogs", "refresh").getResource().attachImageIcon(this, true);
         }
 
         @Override
@@ -334,18 +340,17 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             model.unmarkAll();
             updateTitle();
         }
-
     }
 
     private class ClearAction extends AbstractAction {
 
         TodoListModel model;
 
-        public ClearAction(TodoListModel model) {
+        ClearAction(TodoListModel model) {
             this.model = model;
             putValue(NAME, tr("Clear the todo list"));
-            putValue(SHORT_DESCRIPTION,  tr("Remove all items (marked and unmarked) from the todo list."));
-            putValue(SMALL_ICON, ImageProvider.get("dialogs","delete"));
+            putValue(SHORT_DESCRIPTION, tr("Remove all items (marked and unmarked) from the todo list."));
+            new ImageProvider("dialogs", "delete").getResource().attachImageIcon(this, true);
         }
 
         @Override
@@ -353,7 +358,6 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             model.clear();
             updateTitle();
         }
-
     }
 
     /**
@@ -362,7 +366,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     class DblClickHandler extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() < 2 || ! SwingUtilities.isLeftMouseButton(e)) return;
+            if (e.getClickCount() < 2 || !SwingUtilities.isLeftMouseButton(e))
+                return;
             selectAndZoom(model.getSelected());
         }
     }
@@ -374,7 +379,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         @Override
         public void launch(MouseEvent evt) {
             int idx = lstPrimitives.locationToIndex(evt.getPoint());
-            if(idx >= 0)  model.setSelected((OsmPrimitive)model.getElementAt(idx));
+            if (idx >= 0)
+                model.setSelected(model.getElementAt(idx));
 
             popupMenu.show(lstPrimitives, evt.getX(), evt.getY());
         }
@@ -384,7 +390,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
      * A right-click popup context menu for setting options and performing other functions on the todo list items.
      */
     class TodoPopup extends ListPopupMenu {
-        public TodoPopup(JList list) {
+        TodoPopup(JList<OsmPrimitive> list) {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
@@ -393,9 +399,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
             add(new UnmarkAllAction(model));
             add(new ClearAction(model));
             addSeparator();
-            add(actMarkSelected = new MarkSelectedAction(model));
+            add(actMarkSelected);
             add(new SelectUnmarkedAction(model));
-
         }
     }
 
