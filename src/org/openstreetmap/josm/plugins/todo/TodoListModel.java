@@ -10,12 +10,10 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListSelectionModel;
 
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
+public class TodoListModel extends AbstractListModel<TodoListItem> {
 
-public class TodoListModel extends AbstractListModel<OsmPrimitive> {
-
-    private final ArrayList<OsmPrimitive> todoList = new ArrayList<>();
-    private final ArrayList<OsmPrimitive> doneList = new ArrayList<>();
+    private final ArrayList<TodoListItem> todoList = new ArrayList<>();
+    private final ArrayList<TodoListItem> doneList = new ArrayList<>();
     private final DefaultListSelectionModel selectionModel;
 
     public TodoListModel(DefaultListSelectionModel selectionModel) {
@@ -23,7 +21,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
     }
 
     @Override
-    public OsmPrimitive getElementAt(int index) {
+    public TodoListItem getElementAt(int index) {
         return todoList.get(index);
     }
 
@@ -36,13 +34,13 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
         return doneList.size();
     }
 
-    public OsmPrimitive getSelected() {
+    public TodoListItem getSelected() {
         if (getSize() == 0 || selectionModel.isSelectionEmpty() || selectionModel.getMinSelectionIndex() >= getSize())
             return null;
         return todoList.get(selectionModel.getMinSelectionIndex());
     }
 
-    public List<OsmPrimitive> getTodoList() {
+    public List<TodoListItem> getTodoList() {
         return todoList;
     }
 
@@ -61,7 +59,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
         selectionModel.setSelectionInterval(idx, idx);
     }
 
-    public void addItems(Collection<OsmPrimitive> items) {
+    public void addItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
         doneList.removeAll(items);
@@ -72,7 +70,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
             selectionModel.setSelectionInterval(0, 0);
         } else {
             todoList.ensureCapacity(size + items.size());
-            for (OsmPrimitive item: items) {
+            for (TodoListItem item: items) {
                 if (!todoList.contains(item))
                     todoList.add(item);
             }
@@ -91,7 +89,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
         selectionModel.setSelectionInterval(sel, sel);
     }
 
-    public void setSelected(OsmPrimitive element) {
+    public void setSelected(TodoListItem element) {
         int sel = todoList.indexOf(element);
         if (sel == -1)
             return;
@@ -107,7 +105,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
-    public void markItems(Collection<OsmPrimitive> items) {
+    public void markItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
         int size = getSize();
@@ -116,7 +114,7 @@ public class TodoListModel extends AbstractListModel<OsmPrimitive> {
 
         int sel = selectionModel.getMinSelectionIndex();
 
-        for (OsmPrimitive item: items) {
+        for (TodoListItem item: items) {
             int i;
             if ((i = todoList.indexOf(item)) != -1) {
                 todoList.remove(i);
