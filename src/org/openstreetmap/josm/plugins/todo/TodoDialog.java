@@ -9,8 +9,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListSelectionModel;
@@ -26,9 +29,9 @@ import org.openstreetmap.josm.data.SelectionChangedListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
-import org.openstreetmap.josm.gui.OsmPrimitivRenderer;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.ImageProvider;
@@ -40,7 +43,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
     private final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel();
     private final TodoListModel model = new TodoListModel(selectionModel);
-    private final JList<OsmPrimitive> lstPrimitives = new JList<>(model);
+    private final JList<TodoListItem> lstPrimitives = new JList<>(model);
     private final AddAction actAdd = new AddAction(model);
     private final PassAction actPass = new PassAction(model);
     private final MarkAction actMark = new MarkAction(model);
@@ -73,7 +76,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     protected void buildContentPanel() {
         lstPrimitives.setSelectionModel(selectionModel);
         lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lstPrimitives.setCellRenderer(new OsmPrimitivRenderer());
+        lstPrimitives.setCellRenderer(new TodoListItemRenderer());
         lstPrimitives.setTransferHandler(null);
 
         // the select action
@@ -103,18 +106,36 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }));
     }
 
-    protected static void selectAndZoom(OsmPrimitive object) {
-        if (object == null || Main.getLayerManager().getEditLayer() == null)
-            return;
-        Main.getLayerManager().getEditLayer().data.setSelected(object);
+    private static void zoom(OsmDataLayer layer) {
+        OsmDataLayer prev = Main.getLayerManager().getEditLayer();
+
+        Main.getLayerManager().setActiveLayer(layer);
         AutoScaleAction.autoScale("selection");
+
+        Main.getLayerManager().setActiveLayer(prev);
     }
 
-    protected static void selectAndZoom(Collection<OsmPrimitive> object) {
-        if (object == null || Main.getLayerManager().getEditLayer() == null)
-            return;
-        Main.getLayerManager().getEditLayer().data.setSelected(object);
-        AutoScaleAction.autoScale("selection");
+    protected static void selectAndZoom(TodoListItem object) {
+        if (object == null) return;
+        object.layer.data.setSelected(object.primitive);
+        zoom(object.layer);
+    }
+
+    protected static void selectAndZoom(Collection<TodoListItem> object) {
+        if (object == null || object.isEmpty()) return;
+        OsmDataLayer layer = null;
+        while (!object.isEmpty()) {
+            layer = ((TodoListItem)object.toArray()[0]).layer;
+            Collection<OsmPrimitive> items = new ArrayList<>();
+            for (Iterator<TodoListItem> it = object.iterator(); it.hasNext();) {
+                TodoListItem item = it.next();
+                if (item.layer != layer) continue;
+                items.add(item.primitive);
+                it.remove();
+            }
+            layer.data.setSelected(items);
+        }
+        zoom(layer);
     }
 
     protected void updateTitle() {
@@ -126,6 +147,14 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
         SelectionEventManager.getInstance().addSelectionListener(actMarkSelected, FireMode.IN_EDT_CONSOLIDATED);
         actAdd.updateEnabledState();
+    }
+
+    protected Collection<TodoListItem> getItems() {
+        OsmDataLayer layer = Main.getLayerManager().getEditLayer();
+        if (layer == null)
+            return null;
+
+        return layer.data.getSelected().stream().map(primitive -> new TodoListItem(layer, primitive)).collect(Collectors.toList());
     }
 
     private static class SelectAction extends AbstractAction implements ListSelectionListener {
@@ -220,10 +249,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.getLayerManager().getEditLayer() == null)
-                return;
-            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
-            model.addItems(sel);
+            model.addItems(getItems());
             updateTitle();
         }
 
@@ -254,10 +280,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Main.getLayerManager().getEditLayer() == null)
-                return;
-            Collection<OsmPrimitive> sel = Main.getLayerManager().getEditLayer().data.getSelected();
-            model.markItems(sel);
+            model.markItems(getItems());
             updateTitle();
         }
 
@@ -390,7 +413,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
      * A right-click popup context menu for setting options and performing other functions on the todo list items.
      */
     class TodoPopup extends ListPopupMenu {
-        TodoPopup(JList<OsmPrimitive> list) {
+        TodoPopup(JList<TodoListItem> list) {
             super(list);
             add(new SelectAction(model));
             add(new MarkAction(model));
