@@ -11,7 +11,7 @@
     <!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
     <target name="revision">
-        <property name="version.entry.commit.revision" value="30200"/>
-        <property name="version.entry.commit.date" value="2017-04-11T00:00:00Z"/>
+        <property name="version.entry.commit.revision" value="30300"/>
+        <property name="version.entry.commit.date" value="2017-08-20T00:00:00Z"/>
     </target>
 </project>
