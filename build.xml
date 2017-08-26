@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="todo" default="dist" basedir=".">
     <property name="commit.message" value="Commit message"/>
-    <property name="plugin.main.version" value="10580"/>
+    <property name="plugin.main.version" value="12663"/>
     <property name="plugin.author" value="Gnonthgol and AndrewBuck"/>
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.todo.TodoPlugin"/>
     <property name="plugin.description" value="Adds a todo list dialog that makes it easy to go through large lists of objects"/>
@@ -11,7 +11,7 @@
     <!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
     <target name="revision">
-        <property name="version.entry.commit.revision" value="30300"/>
+        <property name="version.entry.commit.revision" value="30301"/>
         <property name="version.entry.commit.date" value="2017-08-20T00:00:00Z"/>
     </target>
 </project>

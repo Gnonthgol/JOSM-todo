@@ -23,12 +23,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.AutoScaleAction;
 import org.openstreetmap.josm.data.SelectionChangedListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
@@ -91,12 +91,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         // the pass button
         SideButton passButton = new SideButton(actPass);
         lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
-        Main.registerActionShortcut(actPass, sctPass);
+        MainApplication.registerActionShortcut(actPass, sctPass);
 
         // the mark button
         SideButton markButton = new SideButton(actMark);
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
-        Main.registerActionShortcut(actMark, sctMark);
+        MainApplication.registerActionShortcut(actMark, sctMark);
 
         // the mark from map button
         SideButton markSelectedButton = new SideButton(actMarkSelected);
@@ -107,12 +107,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     }
 
     private static void zoom(OsmDataLayer layer) {
-        OsmDataLayer prev = Main.getLayerManager().getEditLayer();
+        OsmDataLayer prev = MainApplication.getLayerManager().getEditLayer();
 
-        Main.getLayerManager().setActiveLayer(layer);
+        MainApplication.getLayerManager().setActiveLayer(layer);
         AutoScaleAction.autoScale("selection");
 
-        Main.getLayerManager().setActiveLayer(prev);
+        MainApplication.getLayerManager().setActiveLayer(prev);
     }
 
     protected static void selectAndZoom(TodoListItem object) {
@@ -125,7 +125,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         if (object == null || object.isEmpty()) return;
         OsmDataLayer layer = null;
         while (!object.isEmpty()) {
-            layer = ((TodoListItem)object.toArray()[0]).layer;
+            layer = ((TodoListItem) object.toArray()[0]).layer;
             Collection<OsmPrimitive> items = new ArrayList<>();
             for (Iterator<TodoListItem> it = object.iterator(); it.hasNext();) {
                 TodoListItem item = it.next();
@@ -150,7 +150,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     }
 
     protected Collection<TodoListItem> getItems() {
-        OsmDataLayer layer = Main.getLayerManager().getEditLayer();
+        OsmDataLayer layer = MainApplication.getLayerManager().getEditLayer();
         if (layer == null)
             return null;
 
@@ -254,10 +254,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
 
         public void updateEnabledState() {
-            if (Main.getLayerManager().getEditLayer() == null) {
+            if (MainApplication.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
+                setEnabled(!MainApplication.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
@@ -285,10 +285,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
         }
 
         public void updateEnabledState() {
-            if (Main.getLayerManager().getEditLayer() == null) {
+            if (MainApplication.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!Main.getLayerManager().getEditLayer().data.selectionEmpty());
+                setEnabled(!MainApplication.getLayerManager().getEditLayer().data.selectionEmpty());
             }
         }
 
@@ -435,7 +435,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     @Override
     public void destroy() {
         super.destroy();
-        Main.unregisterActionShortcut(actPass, sctPass);
-        Main.unregisterActionShortcut(actMark, sctMark);
+        MainApplication.unregisterActionShortcut(actPass, sctPass);
+        MainApplication.unregisterActionShortcut(actMark, sctMark);
     }
 }

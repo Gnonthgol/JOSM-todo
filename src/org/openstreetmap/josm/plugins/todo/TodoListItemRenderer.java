@@ -4,15 +4,15 @@ package org.openstreetmap.josm.plugins.todo;
 import java.awt.Component;
 
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
 
-import org.openstreetmap.josm.gui.DefaultNameFormatter;
+import org.openstreetmap.josm.data.osm.DefaultNameFormatter;
 import org.openstreetmap.josm.gui.OsmPrimitivRenderer;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Logging;
 
 public class TodoListItemRenderer implements ListCellRenderer<TodoListItem> {
     private final DefaultNameFormatter formatter = DefaultNameFormatter.getInstance();
@@ -36,7 +36,7 @@ public class TodoListItemRenderer implements ListCellRenderer<TodoListItem> {
             if (icon != null) {
                 ((JLabel) def).setIcon(icon);
             } else {
-                Main.warn("Null icon for "+value.primitive.getDisplayType());
+                Logging.warn("Null icon for "+value.primitive.getDisplayType());
             }
             ((JLabel) def).setToolTipText(formatter.buildDefaultToolTip(value.primitive));
         }
