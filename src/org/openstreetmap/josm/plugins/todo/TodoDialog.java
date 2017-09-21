@@ -109,10 +109,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     private static void zoom(OsmDataLayer layer) {
         OsmDataLayer prev = MainApplication.getLayerManager().getEditLayer();
 
-        MainApplication.getLayerManager().setActiveLayer(layer);
-        AutoScaleAction.autoScale("selection");
-
-        MainApplication.getLayerManager().setActiveLayer(prev);
+        try {
+            MainApplication.getLayerManager().setActiveLayer(layer);
+            AutoScaleAction.autoScale("selection");
+        } finally {
+            MainApplication.getLayerManager().setActiveLayer(prev);
+        }
     }
 
     protected static void selectAndZoom(TodoListItem object) {
