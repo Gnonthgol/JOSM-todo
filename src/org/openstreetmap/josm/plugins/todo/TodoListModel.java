@@ -79,7 +79,7 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
     }
 
     public void markSelected() {
-        if (selectionModel.isSelectionEmpty())
+        if (selectionModel.isSelectionEmpty() || getSize() == 0)
             return;
         int sel = selectionModel.getMinSelectionIndex();
         doneList.add(todoList.remove(sel));
