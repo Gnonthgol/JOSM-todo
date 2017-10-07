@@ -10,6 +10,8 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListSelectionModel;
 
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+
 public class TodoListModel extends AbstractListModel<TodoListItem> {
 
     private final ArrayList<TodoListItem> todoList = new ArrayList<>();
@@ -76,6 +78,17 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
             }
             super.fireIntervalAdded(this, size, getSize()-1);
         }
+    }
+
+    public boolean purgeLayerItems(OsmDataLayer layer) {
+        int n = getSize() - 1;
+        boolean changed = todoList.removeIf(i -> layer.equals(i.layer));
+        if (changed) {
+            super.fireIntervalRemoved(this, 0, n);
+            selectionModel.setSelectionInterval(0, 0);
+        }
+        changed |= doneList.removeIf(i -> layer.equals(i.layer));
+        return changed;
     }
 
     public void markSelected() {

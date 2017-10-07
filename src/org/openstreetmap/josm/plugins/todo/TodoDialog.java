@@ -31,13 +31,17 @@ import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
+import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 
-public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
+public class TodoDialog extends ToggleDialog implements PropertyChangeListener, LayerChangeListener {
 
     private static final long serialVersionUID = 3590739974800809827L;
 
@@ -65,6 +69,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
                         KeyEvent.VK_T, Shortcut.CTRL_SHIFT), 150);
         buildContentPanel();
 
+        MainApplication.getLayerManager().addLayerChangeListener(this);
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
         toggleAction.addPropertyChangeListener(this);
@@ -437,7 +442,27 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener {
     @Override
     public void destroy() {
         super.destroy();
+        MainApplication.getLayerManager().removeLayerChangeListener(this);
         MainApplication.unregisterActionShortcut(actPass, sctPass);
         MainApplication.unregisterActionShortcut(actMark, sctMark);
+    }
+
+    @Override
+    public void layerAdded(LayerAddEvent e) {
+        // Do nothing
+    }
+
+    @Override
+    public void layerRemoving(LayerRemoveEvent e) {
+        if (e.getRemovedLayer() instanceof OsmDataLayer) {
+            if (model.purgeLayerItems((OsmDataLayer) e.getRemovedLayer())) {
+                updateTitle();
+            }
+        }
+    }
+
+    @Override
+    public void layerOrderChanged(LayerOrderChangeEvent e) {
+        // Do nothing
     }
 }

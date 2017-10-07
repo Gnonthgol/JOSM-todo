@@ -1,16 +1,18 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.todo;
 
+import java.util.Objects;
+
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
 public class TodoListItem {
-    OsmDataLayer layer;
-    OsmPrimitive primitive;
+    final OsmDataLayer layer;
+    final OsmPrimitive primitive;
 
     public TodoListItem(OsmDataLayer layer, OsmPrimitive primitive) {
-        this.layer = layer;
-        this.primitive = primitive;
+        this.layer = Objects.requireNonNull(layer, "layer");
+        this.primitive = Objects.requireNonNull(primitive, "primitive");
     }
 
     @Override
@@ -22,7 +24,7 @@ public class TodoListItem {
     public boolean equals(Object obj) {
         if (!(obj instanceof TodoListItem))
             return false;
-        TodoListItem item = (TodoListItem)obj;
+        TodoListItem item = (TodoListItem) obj;
         return layer.equals(item.layer) && primitive.equals(item.primitive);
     }
 
