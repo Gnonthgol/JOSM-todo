@@ -82,6 +82,8 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
         if (selectionModel.isSelectionEmpty() || getSize() == 0)
             return;
         int sel = selectionModel.getMinSelectionIndex();
+        if (sel >= todoList.size())
+            return;
         doneList.add(todoList.remove(sel));
         super.fireIntervalRemoved(this, sel, sel);
         if (sel == getSize())
