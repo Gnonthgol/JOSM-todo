@@ -6,7 +6,7 @@
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.todo.TodoPlugin"/>
     <property name="plugin.description" value="Adds a todo list dialog that makes it easy to go through large lists of objects"/>
     <property name="plugin.icon" value="images/dialogs/todo.png"/>
-    <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/TODO_list"/>
+    <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/TODO_list"/>
 
     <!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
