@@ -10,14 +10,13 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
 import org.openstreetmap.josm.data.osm.DefaultNameFormatter;
-import org.openstreetmap.josm.gui.OsmPrimitivRenderer;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 
 public class TodoListItemRenderer implements ListCellRenderer<TodoListItem> {
     private final DefaultNameFormatter formatter = DefaultNameFormatter.getInstance();
     private final DefaultListCellRenderer defaultListCellRenderer = new DefaultListCellRenderer();
-    private final OsmPrimitivRenderer renderer = new OsmPrimitivRenderer();
+
     @Override
     public Component getListCellRendererComponent(JList<? extends TodoListItem> list, TodoListItem value, int index,
             boolean isSelected, boolean cellHasFocus) {

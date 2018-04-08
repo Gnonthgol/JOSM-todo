@@ -8,10 +8,16 @@
     <property name="plugin.icon" value="images/dialogs/todo.png"/>
     <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/TODO_list"/>
 
+    <target name="additional-manifest">
+        <manifest file="MANIFEST" mode="update">
+            <attribute name="10580_Plugin-Url" value="https://github.com/JOSM/todo/releases/download/v30300/conflation.jar" />
+        </manifest>
+    </target>
+
     <!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
     <target name="revision">
-        <property name="version.entry.commit.revision" value="30303"/>
-        <property name="version.entry.commit.date" value="2017-10-07T00:00:00Z"/>
+        <property name="version.entry.commit.revision" value="30304"/>
+        <property name="version.entry.commit.date" value="2018-04-08T00:00:00Z"/>
     </target>
 </project>
