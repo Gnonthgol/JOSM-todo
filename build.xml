@@ -10,7 +10,7 @@
 
     <target name="additional-manifest">
         <manifest file="MANIFEST" mode="update">
-            <attribute name="10580_Plugin-Url" value="https://github.com/JOSM/todo/releases/download/v30300/conflation.jar" />
+            <attribute name="10580_Plugin-Url" value="v30300;https://github.com/JOSM/todo/releases/download/v30300/conflation.jar" />
         </manifest>
     </target>
 
