@@ -24,9 +24,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openstreetmap.josm.actions.AutoScaleAction;
-import org.openstreetmap.josm.data.SelectionChangedListener;
+import org.openstreetmap.josm.data.osm.DataSelectionListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
@@ -151,8 +150,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     @Override
     public void showNotify() {
-        SelectionEventManager.getInstance().addSelectionListener(actAdd, FireMode.IN_EDT_CONSOLIDATED);
-        SelectionEventManager.getInstance().addSelectionListener(actMarkSelected, FireMode.IN_EDT_CONSOLIDATED);
+        SelectionEventManager.getInstance().addSelectionListenerForEdt(actAdd);
+        SelectionEventManager.getInstance().addSelectionListenerForEdt(actMarkSelected);
         actAdd.updateEnabledState();
     }
 
@@ -243,7 +242,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    private class AddAction extends AbstractAction implements SelectionChangedListener {
+    private class AddAction extends AbstractAction implements DataSelectionListener {
         private final TodoListModel model;
 
         AddAction(TodoListModel model) {
@@ -269,12 +268,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
 
         @Override
-        public void selectionChanged(Collection<? extends OsmPrimitive> arg) {
+        public void selectionChanged(SelectionChangeEvent event) {
             updateEnabledState();
         }
     }
 
-    private class MarkSelectedAction extends AbstractAction implements SelectionChangedListener {
+    private class MarkSelectedAction extends AbstractAction implements DataSelectionListener {
         private final TodoListModel model;
 
         MarkSelectedAction(TodoListModel model) {
@@ -300,7 +299,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
 
         @Override
-        public void selectionChanged(Collection<? extends OsmPrimitive> arg) {
+        public void selectionChanged(SelectionChangeEvent event) {
             updateEnabledState();
         }
     }
