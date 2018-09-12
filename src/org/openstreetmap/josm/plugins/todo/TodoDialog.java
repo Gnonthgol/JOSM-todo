@@ -24,6 +24,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.openstreetmap.josm.actions.AutoScaleAction;
+import org.openstreetmap.josm.actions.AutoScaleAction.AutoScaleMode;
 import org.openstreetmap.josm.data.osm.DataSelectionListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
@@ -40,6 +41,9 @@ import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 
+/**
+ * Todo dialog.
+ */
 public class TodoDialog extends ToggleDialog implements PropertyChangeListener, LayerChangeListener {
 
     private static final long serialVersionUID = 3590739974800809827L;
@@ -115,7 +119,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         try {
             MainApplication.getLayerManager().setActiveLayer(layer);
-            AutoScaleAction.autoScale("selection");
+            AutoScaleAction.autoScale(AutoScaleMode.SELECTION);
         } finally {
             MainApplication.getLayerManager().setActiveLayer(prev);
         }
