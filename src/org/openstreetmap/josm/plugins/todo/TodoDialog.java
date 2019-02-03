@@ -121,7 +121,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             MainApplication.getLayerManager().setActiveLayer(layer);
             AutoScaleAction.autoScale(AutoScaleMode.SELECTION);
         } finally {
-            MainApplication.getLayerManager().setActiveLayer(prev);
+            if (prev != null) {
+                MainApplication.getLayerManager().setActiveLayer(prev);
+            }
         }
     }
 
