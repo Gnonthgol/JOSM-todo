@@ -20,6 +20,8 @@ import javax.swing.DefaultListSelectionModel;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -27,7 +29,9 @@ import org.openstreetmap.josm.actions.AutoScaleAction;
 import org.openstreetmap.josm.actions.AutoScaleAction.AutoScaleMode;
 import org.openstreetmap.josm.data.osm.DataSelectionListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.event.DatasetEventManager;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
+import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
@@ -35,10 +39,13 @@ import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
+import org.openstreetmap.josm.gui.util.HighlightHelper;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
+import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.InputMapUtils;
 import org.openstreetmap.josm.tools.Shortcut;
 
 /**
@@ -52,6 +59,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     private final TodoListModel model = new TodoListModel(selectionModel);
     private final JList<TodoListItem> lstPrimitives = new JList<>(model);
     private final AddAction actAdd = new AddAction(model);
+    private final SelectAction actSelect = new SelectAction(model);
     private final PassAction actPass = new PassAction(model);
     private final MarkAction actMark = new MarkAction(model);
     private final MarkSelectedAction actMarkSelected = new MarkSelectedAction(model);
@@ -72,10 +80,15 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
                         KeyEvent.VK_T, Shortcut.CTRL_SHIFT), 150);
         buildContentPanel();
 
+        model.addListDataListener(new TitleUpdater());
+
         MainApplication.getLayerManager().addLayerChangeListener(this);
+        DatasetEventManager.getInstance().addDatasetListener(model, FireMode.IN_EDT);
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
         toggleAction.addPropertyChangeListener(this);
+
+        InputMapUtils.addEnterAction(lstPrimitives, actSelect);
     }
 
     /**
@@ -83,14 +96,14 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
      */
     protected void buildContentPanel() {
         lstPrimitives.setSelectionModel(selectionModel);
-        lstPrimitives.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lstPrimitives.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         lstPrimitives.setCellRenderer(new TodoListItemRenderer());
         lstPrimitives.setTransferHandler(null);
 
         // the select action
-        SelectAction actSelect = new SelectAction(model);
         SideButton selectButton = new SideButton(actSelect);
         lstPrimitives.getSelectionModel().addListSelectionListener(actSelect);
+        actSelect.updateEnabledState();
 
         // the add button
         SideButton addButton = new SideButton(actAdd);
@@ -147,7 +160,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             }
             layer.data.setSelected(items);
         }
-        zoom(layer);
+        if (!layer.data.selectionEmpty()) {
+            zoom(layer);
+        }
     }
 
     protected void updateTitle() {
@@ -159,6 +174,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         SelectionEventManager.getInstance().addSelectionListenerForEdt(actAdd);
         SelectionEventManager.getInstance().addSelectionListenerForEdt(actMarkSelected);
         actAdd.updateEnabledState();
+    }
+
+    @Override
+    public void hideNotify() {
+        SelectionEventManager.getInstance().removeSelectionListener(actAdd);
+        SelectionEventManager.getInstance().removeSelectionListener(actMarkSelected);
     }
 
     protected Collection<TodoListItem> getItems() {
@@ -186,7 +207,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
 
         public void updateEnabledState() {
-            setEnabled(model.getSelected() != null);
+            setEnabled(!model.isSelectionEmpty());
         }
 
         @Override
@@ -262,7 +283,6 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         @Override
         public void actionPerformed(ActionEvent e) {
             model.addItems(getItems());
-            updateTitle();
         }
 
         public void updateEnabledState() {
@@ -293,7 +313,6 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         @Override
         public void actionPerformed(ActionEvent e) {
             model.markItems(getItems());
-            updateTitle();
         }
 
         public void updateEnabledState() {
@@ -310,7 +329,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    private class MarkAction extends AbstractAction implements ListSelectionListener {
+    private static class MarkAction extends AbstractAction implements ListSelectionListener {
 
         TodoListModel model;
 
@@ -324,13 +343,12 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            model.markSelected();
+            model.markItems(model.getSelected());
             selectAndZoom(model.getSelected());
-            updateTitle();
         }
 
         public void updateEnabledState() {
-            setEnabled(model.getSelected() != null);
+            setEnabled(!model.isSelectionEmpty());
         }
 
         @Override
@@ -339,7 +357,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    private class MarkAllAction extends AbstractAction {
+    private static class MarkAllAction extends AbstractAction {
 
         TodoListModel model;
 
@@ -354,12 +372,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         public void actionPerformed(ActionEvent arg0) {
             model.markAll();
             selectAndZoom(model.getSelected());
-            updateTitle();
         }
-
     }
 
-    private class UnmarkAllAction extends AbstractAction {
+    private static class UnmarkAllAction extends AbstractAction {
 
         TodoListModel model;
 
@@ -373,11 +389,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             model.unmarkAll();
-            updateTitle();
         }
     }
 
-    private class ClearAction extends AbstractAction {
+    private static class ClearAction extends AbstractAction {
 
         TodoListModel model;
 
@@ -391,7 +406,6 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             model.clear();
-            updateTitle();
         }
     }
 
@@ -411,13 +425,27 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
      * The popup menu launcher.
      */
     class TodoPopupLauncher extends PopupMenuLauncher {
-        @Override
-        public void launch(MouseEvent evt) {
-            int idx = lstPrimitives.locationToIndex(evt.getPoint());
-            if (idx >= 0)
-                model.setSelected(model.getElementAt(idx));
+        private final HighlightHelper helper = new HighlightHelper();
+        private final boolean highlightEnabled = Config.getPref().getBoolean("draw.target-highlight", true);
+        
+        TodoPopupLauncher() {
+            super(popupMenu);
+        }
 
-            popupMenu.show(lstPrimitives, evt.getX(), evt.getY());
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int idx = lstPrimitives.locationToIndex(e.getPoint());
+            if (idx < 0) return;
+            if (highlightEnabled && MainApplication.isDisplayingMapView() && 
+                       helper.highlightOnly(model.getElementAt(idx).primitive)) {
+                MainApplication.getMap().mapView.repaint();
+            }
+        }
+
+        @Override
+        public void mouseExited(MouseEvent me) {
+            if (highlightEnabled) helper.clear();
+            super.mouseExited(me);
         }
     }
 
@@ -439,6 +467,26 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
+    /**
+     * Updates the dialog title with a summary of the current todo list status
+     */
+    class TitleUpdater implements ListDataListener {
+        @Override
+        public void contentsChanged(ListDataEvent e) {
+            updateTitle();
+        }
+
+        @Override
+        public void intervalAdded(ListDataEvent e) {
+            updateTitle();
+        }
+
+        @Override
+        public void intervalRemoved(ListDataEvent e) {
+            updateTitle();
+        }
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
         actAdd.updateEnabledState();
@@ -448,6 +496,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     public void destroy() {
         super.destroy();
         MainApplication.getLayerManager().removeLayerChangeListener(this);
+        DatasetEventManager.getInstance().removeDatasetListener(model);
         MainApplication.unregisterActionShortcut(actPass, sctPass);
         MainApplication.unregisterActionShortcut(actMark, sctMark);
     }
@@ -460,9 +509,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     @Override
     public void layerRemoving(LayerRemoveEvent e) {
         if (e.getRemovedLayer() instanceof OsmDataLayer) {
-            if (model.purgeLayerItems((OsmDataLayer) e.getRemovedLayer())) {
-                updateTitle();
-            }
+            model.purgeLayerItems((OsmDataLayer) e.getRemovedLayer());
         }
     }
 

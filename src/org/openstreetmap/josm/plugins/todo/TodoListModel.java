@@ -6,13 +6,32 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListSelectionModel;
 
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.event.AbstractDatasetChangedEvent;
+import org.openstreetmap.josm.data.osm.event.DataChangedEvent;
+import org.openstreetmap.josm.data.osm.event.DataSetListener;
+import org.openstreetmap.josm.data.osm.event.NodeMovedEvent;
+import org.openstreetmap.josm.data.osm.event.PrimitivesAddedEvent;
+import org.openstreetmap.josm.data.osm.event.PrimitivesRemovedEvent;
+import org.openstreetmap.josm.data.osm.event.RelationMembersChangedEvent;
+import org.openstreetmap.josm.data.osm.event.TagsChangedEvent;
+import org.openstreetmap.josm.data.osm.event.WayNodesChangedEvent;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.util.TableHelper;
 
-public class TodoListModel extends AbstractListModel<TodoListItem> {
+/**
+ * The list model for the todo list items.
+ *
+ * The model also maintains a list of already completed items
+ *
+ */
+public class TodoListModel extends AbstractListModel<TodoListItem> implements DataSetListener {
 
     private final ArrayList<TodoListItem> todoList = new ArrayList<>();
     private final ArrayList<TodoListItem> doneList = new ArrayList<>();
@@ -32,14 +51,26 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
         return todoList.size();
     }
 
+    public boolean isSelectionEmpty() {
+        return selectionModel.isSelectionEmpty();
+    }
+
     public int getDoneSize() {
         return doneList.size();
     }
 
-    public TodoListItem getSelected() {
-        if (getSize() == 0 || selectionModel.isSelectionEmpty() || selectionModel.getMinSelectionIndex() >= getSize())
-            return null;
-        return todoList.get(selectionModel.getMinSelectionIndex());
+    public synchronized Collection<TodoListItem> getSelected() {
+        return IntStream.range(0, getSize())
+                .filter(selectionModel::isSelectedIndex)
+                .mapToObj(todoList::get)
+                .collect(Collectors.toSet());
+    }
+
+    public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends OsmPrimitive> primitives) {
+        return todoList.stream().filter(i -> primitives.stream()
+                                            .anyMatch(p -> i.primitive.equals(p) &&
+                                                           i.layer.getDataSet().equals(p.getDataSet())))
+            .collect(Collectors.toList());
     }
 
     public List<TodoListItem> getTodoList() {
@@ -104,11 +135,9 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
         selectionModel.setSelectionInterval(sel, sel);
     }
 
-    public void setSelected(TodoListItem element) {
-        int sel = todoList.indexOf(element);
-        if (sel == -1)
-            return;
-        selectionModel.setSelectionInterval(sel, sel);
+    public synchronized void setSelected(Collection<TodoListItem> sel) {
+        TableHelper.setSelectedIndices(selectionModel,
+                sel != null ? sel.stream().mapToInt(todoList::indexOf) : IntStream.empty());
     }
 
     public void markAll() {
@@ -117,6 +146,18 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
             return;
         doneList.addAll(todoList);
         todoList.clear();
+        super.fireIntervalRemoved(this, 0, size-1);
+    }
+
+    public void removeItems(Collection<TodoListItem> items) {
+        if (items == null || items.isEmpty())
+            return;
+
+        int size = getSize();
+
+        todoList.removeAll(items);
+        doneList.removeAll(items);
+
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
@@ -175,4 +216,70 @@ public class TodoListModel extends AbstractListModel<TodoListItem> {
         else return tr("Todo list {0}/{1} ({2}%)", getDoneSize(), totalSize, 100.0*getDoneSize()/totalSize);
     }
 
+    /**
+     * Triggers a refresh of the view for all items in {@code toUpdate}
+     * which are currently displayed in the view
+     *
+     * @param toUpdate the collection of items to update
+     */
+    public synchronized void update(Collection<? extends TodoListItem> toUpdate) {
+        if (toUpdate == null) return;
+        if (toUpdate.isEmpty()) return;
+        Collection<TodoListItem> sel = getSelected();
+        for (TodoListItem p: toUpdate) {
+            int i = todoList.indexOf(p);
+            if (i >= 0) {
+                super.fireContentsChanged(this, i, i);
+            }
+        }
+        setSelected(sel);
+    }
+
+    @Override
+    public void primitivesAdded(PrimitivesAddedEvent event) {
+        // ignored
+    }
+
+    @Override
+    public void primitivesRemoved(PrimitivesRemovedEvent event) {
+        removeItems(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void tagsChanged(TagsChangedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void nodeMoved(NodeMovedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void wayNodesChanged(WayNodesChangedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void relationMembersChanged(RelationMembersChangedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void otherDatasetChange(AbstractDatasetChangedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+    }
+
+    @Override
+    public void dataChanged(DataChangedEvent event) {
+        update(getItemsForPrimitives(event.getPrimitives()));
+        List<AbstractDatasetChangedEvent> changeEvents = event.getEvents();
+        if (changeEvents != null) {
+            for (AbstractDatasetChangedEvent e : changeEvents) {
+                if (e instanceof PrimitivesRemovedEvent) {
+                    primitivesRemoved((PrimitivesRemovedEvent) e);
+                }
+            }
+        }
+    }
 }
