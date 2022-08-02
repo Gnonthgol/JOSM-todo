@@ -9,11 +9,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultListSelectionModel;
@@ -30,8 +32,8 @@ import org.openstreetmap.josm.actions.AutoScaleAction.AutoScaleMode;
 import org.openstreetmap.josm.data.osm.DataSelectionListener;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager;
-import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
+import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
@@ -39,8 +41,9 @@ import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerRemoveEvent;
-import org.openstreetmap.josm.gui.util.HighlightHelper;
+import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.util.HighlightHelper;
 import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.spi.preferences.Config;
@@ -146,20 +149,25 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     protected static void selectAndZoom(Collection<TodoListItem> object) {
         if (object == null || object.isEmpty()) return;
-        OsmDataLayer layer = null;
-        while (!object.isEmpty()) {
-            layer = ((TodoListItem) object.toArray()[0]).layer();
-            Collection<OsmPrimitive> items = new ArrayList<>();
-            for (Iterator<TodoListItem> it = object.iterator(); it.hasNext();) {
-                TodoListItem item = it.next();
-                if (item.layer() != layer) continue;
-                items.add(item.primitive());
-                it.remove();
+        Map<OsmDataLayer, Set<OsmPrimitive>> sorted = object.stream()
+                .collect(Collectors.groupingBy(t -> t.layer, Collectors.mapping(t -> t.primitive, Collectors.toSet())));
+        sorted.forEach((layer, selected) -> layer.getDataSet().setSelected(selected));
+        // Find the "most" important layer and zoom to the selection there
+        MainLayerManager layerManager = MainApplication.getLayerManager();
+        List<OsmDataLayer> layers =
+                // Do edit layer, then active layer, then any other layer that is in the list.
+                Stream.concat(Stream.of(layerManager.getEditLayer(), layerManager.getActiveLayer()), sorted.keySet().stream())
+                .filter(OsmDataLayer.class::isInstance)
+                .map(OsmDataLayer.class::cast)
+                .collect(Collectors.toList());
+        for (OsmDataLayer layer : layers) {
+            if (sorted.containsKey(layer)) {
+                layer.data.setSelected(sorted.get(layer));
+                if (!layer.data.selectionEmpty()) {
+                    zoom(layer);
+                    break;
+                }
             }
-            layer.data.setSelected(items);
-        }
-        if (!layer.data.selectionEmpty()) {
-            zoom(layer);
         }
     }
 
@@ -443,7 +451,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     class TodoPopupLauncher extends PopupMenuLauncher {
         private final HighlightHelper helper = new HighlightHelper();
         private final boolean highlightEnabled = Config.getPref().getBoolean("draw.target-highlight", true);
-        
+
         TodoPopupLauncher() {
             super(popupMenu);
         }
@@ -452,7 +460,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         public void mouseClicked(MouseEvent e) {
             int idx = lstPrimitives.locationToIndex(e.getPoint());
             if (idx < 0) return;
-            if (highlightEnabled && MainApplication.isDisplayingMapView() && 
+            if (highlightEnabled && MainApplication.isDisplayingMapView() &&
                        helper.highlightOnly(model.getElementAt(idx).primitive())) {
                 MainApplication.getMap().mapView.repaint();
             }
