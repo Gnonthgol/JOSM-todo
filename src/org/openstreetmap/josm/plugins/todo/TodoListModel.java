@@ -72,8 +72,8 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
 
     public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends OsmPrimitive> primitives) {
         return todoList.stream().filter(i -> primitives.stream()
-                                            .anyMatch(p -> i.primitive.equals(p) &&
-                                                           i.layer.getDataSet().equals(p.getDataSet())))
+                                            .anyMatch(p -> i.primitive().equals(p) &&
+                                                           i.layer().getDataSet().equals(p.getDataSet())))
             .collect(Collectors.toList());
     }
 
@@ -117,12 +117,12 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
 
     public boolean purgeLayerItems(OsmDataLayer layer) {
         int n = getSize() - 1;
-        boolean changed = todoList.removeIf(i -> layer.equals(i.layer));
+        boolean changed = todoList.removeIf(i -> layer.equals(i.layer()));
         if (changed) {
             super.fireIntervalRemoved(this, 0, n);
             selectionModel.setSelectionInterval(0, 0);
         }
-        changed |= doneList.removeIf(i -> layer.equals(i.layer));
+        changed |= doneList.removeIf(i -> layer.equals(i.layer()));
         return changed;
     }
 

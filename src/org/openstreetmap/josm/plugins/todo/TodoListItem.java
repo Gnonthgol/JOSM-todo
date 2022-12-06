@@ -9,7 +9,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 /**
  * An item in the todo list
  */
-public class TodoListItem {
+public final class TodoListItem {
     final OsmDataLayer layer;
     final OsmPrimitive primitive;
 
@@ -23,9 +23,25 @@ public class TodoListItem {
         this.primitive = Objects.requireNonNull(primitive, "primitive");
     }
 
+    /**
+     * Get the primitive for this object
+     * @return The primitive
+     */
+    public OsmPrimitive primitive() {
+        return this.primitive;
+    }
+
+    /**
+     * Get the layer for this object
+     * @return The originating layer
+     */
+    public OsmDataLayer layer() {
+        return this.layer;
+    }
+
     @Override
     public String toString() {
-        return layer.toString() + "/" + primitive.toString();
+        return layer + "/" + primitive;
     }
 
     @Override

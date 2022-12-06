@@ -140,20 +140,20 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     protected static void selectAndZoom(TodoListItem object) {
         if (object == null) return;
-        object.layer.data.setSelected(object.primitive);
-        zoom(object.layer);
+        object.layer().data.setSelected(object.primitive());
+        zoom(object.layer());
     }
 
     protected static void selectAndZoom(Collection<TodoListItem> object) {
         if (object == null || object.isEmpty()) return;
         OsmDataLayer layer = null;
         while (!object.isEmpty()) {
-            layer = ((TodoListItem) object.toArray()[0]).layer;
+            layer = ((TodoListItem) object.toArray()[0]).layer();
             Collection<OsmPrimitive> items = new ArrayList<>();
             for (Iterator<TodoListItem> it = object.iterator(); it.hasNext();) {
                 TodoListItem item = it.next();
-                if (item.layer != layer) continue;
-                items.add(item.primitive);
+                if (item.layer() != layer) continue;
+                items.add(item.primitive());
                 it.remove();
             }
             layer.data.setSelected(items);
@@ -453,7 +453,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             int idx = lstPrimitives.locationToIndex(e.getPoint());
             if (idx < 0) return;
             if (highlightEnabled && MainApplication.isDisplayingMapView() && 
-                       helper.highlightOnly(model.getElementAt(idx).primitive)) {
+                       helper.highlightOnly(model.getElementAt(idx).primitive())) {
                 MainApplication.getMap().mapView.repaint();
             }
         }
