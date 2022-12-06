@@ -122,9 +122,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         // the mark from map button
         SideButton markSelectedButton = new SideButton(actMarkSelected);
 
-        createLayout(lstPrimitives, true, Arrays.asList(new SideButton[] {
-                selectButton, addButton, passButton, markButton, markSelectedButton
-        }));
+        createLayout(lstPrimitives, true, Arrays.asList(selectButton, addButton, passButton, markButton, markSelectedButton));
     }
 
     private static void zoom(OsmDataLayer layer) {
@@ -206,6 +204,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             selectAndZoom(model.getSelected());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             setEnabled(!model.isSelectionEmpty());
         }
@@ -232,6 +233,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             selectAndZoom(model.getTodoList());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             setEnabled(model.getSize() > 0);
         }
@@ -259,6 +263,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             selectAndZoom(model.getSelected());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             setEnabled(model.getSize() > 0);
         }
@@ -285,6 +292,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             model.addItems(getItems());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             if (MainApplication.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
@@ -315,6 +325,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             model.markItems(getItems());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             if (MainApplication.getLayerManager().getEditLayer() == null) {
                 setEnabled(false);
@@ -347,6 +360,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             selectAndZoom(model.getSelected());
         }
 
+        /**
+         * Update the enabled state of the action
+         */
         public void updateEnabledState() {
             setEnabled(!model.isSelectionEmpty());
         }

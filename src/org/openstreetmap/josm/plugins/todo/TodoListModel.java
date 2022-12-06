@@ -37,6 +37,10 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
     private final ArrayList<TodoListItem> doneList = new ArrayList<>();
     private final DefaultListSelectionModel selectionModel;
 
+    /**
+     * Create a new model
+     * @param selectionModel The selection model to use
+     */
     public TodoListModel(DefaultListSelectionModel selectionModel) {
         this.selectionModel = selectionModel;
     }

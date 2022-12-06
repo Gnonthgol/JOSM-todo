@@ -13,6 +13,9 @@ import org.openstreetmap.josm.data.osm.DefaultNameFormatter;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 
+/**
+ * Render a {@link TodoListItem}
+ */
 public class TodoListItemRenderer implements ListCellRenderer<TodoListItem> {
     private final DefaultNameFormatter formatter = DefaultNameFormatter.getInstance();
     private final DefaultListCellRenderer defaultListCellRenderer = new DefaultListCellRenderer();

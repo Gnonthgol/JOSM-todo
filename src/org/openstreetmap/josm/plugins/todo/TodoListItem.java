@@ -6,10 +6,18 @@ import java.util.Objects;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 
+/**
+ * An item in the todo list
+ */
 public class TodoListItem {
     final OsmDataLayer layer;
     final OsmPrimitive primitive;
 
+    /**
+     * Create a new item
+     * @param layer The originating layer
+     * @param primitive The primitive to do.
+     */
     public TodoListItem(OsmDataLayer layer, OsmPrimitive primitive) {
         this.layer = Objects.requireNonNull(layer, "layer");
         this.primitive = Objects.requireNonNull(primitive, "primitive");
