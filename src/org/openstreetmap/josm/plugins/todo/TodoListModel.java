@@ -5,7 +5,9 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,6 +15,7 @@ import javax.swing.AbstractListModel;
 import javax.swing.DefaultListSelectionModel;
 
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.PrimitiveId;
 import org.openstreetmap.josm.data.osm.event.AbstractDatasetChangedEvent;
 import org.openstreetmap.josm.data.osm.event.DataChangedEvent;
 import org.openstreetmap.josm.data.osm.event.DataSetListener;
@@ -71,10 +74,18 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
     }
 
     public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends OsmPrimitive> primitives) {
-        return todoList.stream().filter(i -> primitives.stream()
-                                            .anyMatch(p -> i.primitive().equals(p) &&
-                                                           i.layer().getDataSet().equals(p.getDataSet())))
-            .collect(Collectors.toList());
+        final ArrayList<TodoListItem> items = new ArrayList<>(todoList.size());
+        final Map<PrimitiveId, OsmPrimitive> primitiveMap = new HashMap<>(primitives.size());
+        primitives.forEach(primitive -> primitiveMap.put(primitive.getPrimitiveId(), primitive));
+        for (TodoListItem todoListItem : todoList) {
+            final PrimitiveId pid = todoListItem.primitive().getPrimitiveId();
+            if (primitiveMap.containsKey(pid)
+                && todoListItem.layer().getDataSet().equals(primitiveMap.get(pid).getDataSet())) {
+                items.add(todoListItem);
+            }
+        }
+        items.trimToSize();
+        return items;
     }
 
     public List<TodoListItem> getTodoList() {

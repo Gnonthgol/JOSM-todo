@@ -86,7 +86,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         model.addListDataListener(new TitleUpdater());
 
         MainApplication.getLayerManager().addLayerChangeListener(this);
-        DatasetEventManager.getInstance().addDatasetListener(model, FireMode.IN_EDT);
+        DatasetEventManager.getInstance().addDatasetListener(model, FireMode.IN_EDT_CONSOLIDATED);
         lstPrimitives.addMouseListener(new DblClickHandler());
         lstPrimitives.addMouseListener(new TodoPopupLauncher());
         toggleAction.addPropertyChangeListener(this);
