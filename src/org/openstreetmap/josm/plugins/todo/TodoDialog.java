@@ -409,7 +409,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
             super(
                     tr("Mark selected"),
                     "dialogs/select",
-                    tr(" the selected items (on the map) as done in the todo list."),
+                    tr("Mark the selected items (on the map) as done in the todo list."),
                     Shortcut.registerShortcut("subwindow:todo:mark_selected",
                             tr("Mark selected element done"), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE),
                     false
