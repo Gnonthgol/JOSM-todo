@@ -200,6 +200,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     @Override
     public void hideNotify() {
         SelectionEventManager.getInstance().removeSelectionListener(actAdd);
+        SelectionEventManager.getInstance().removeSelectionListener(actClearAndAdd);
         SelectionEventManager.getInstance().removeSelectionListener(actMarkSelected);
     }
 
@@ -448,9 +449,9 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         MarkAction(TodoListModel model) {
             super(
-                    tr("Select all Unmarked and Zoom"),
-                    "dialogs/zoom-best-fit",
-                    tr("Select and zoom to all of the unmarked items in the todo list."),
+                    tr("Mark"),
+                    "dialogs/check",
+                    tr("Mark the selected item in the todo list as done."),
                     Shortcut.registerShortcut("subwindow:todo:mark", tr("Mark element done"), KeyEvent.VK_CLOSE_BRACKET, Shortcut.DIRECT),
                     false
             );
