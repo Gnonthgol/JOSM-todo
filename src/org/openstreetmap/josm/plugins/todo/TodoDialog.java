@@ -34,7 +34,9 @@ import org.openstreetmap.josm.actions.AutoScaleAction;
 import org.openstreetmap.josm.actions.AutoScaleAction.AutoScaleMode;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.data.osm.DataSelectionListener;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager.FireMode;
 import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
@@ -51,7 +53,6 @@ import org.openstreetmap.josm.gui.util.HighlightHelper;
 import org.openstreetmap.josm.gui.widgets.ListPopupMenu;
 import org.openstreetmap.josm.gui.widgets.PopupMenuLauncher;
 import org.openstreetmap.josm.spi.preferences.Config;
-import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.InputMapUtils;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -212,6 +213,15 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         return layer.data.getSelected().stream().map(primitive -> new TodoListItem(layer, primitive)).collect(Collectors.toList());
     }
 
+    private void runWithPrototype(Runnable runnable) {
+        // Set a prototype value to speed up the list painting when `setSelection` methods are called (they call `getListCellRendererComponent`
+        // on every list item)
+        this.lstPrimitives.setPrototypeCellValue(new TodoListItem(new OsmDataLayer(new DataSet(), "XXXXXXXXXXXXXXXXXXXXXXXX", null),
+                new Relation(Long.MAX_VALUE, Integer.MAX_VALUE)));
+        runnable.run();
+        this.lstPrimitives.setPrototypeCellValue(null);
+    }
+
     private static class SelectAction extends JosmAction implements ListSelectionListener {
         private static final long serialVersionUID = -1857091860257862234L;
         private final TodoListModel model;
@@ -284,7 +294,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    private static class PassAction extends JosmAction implements ListSelectionListener {
+    private class PassAction extends JosmAction implements ListSelectionListener {
         private static final long serialVersionUID = -8398150189560976350L;
         private final TodoListModel model;
 
@@ -303,7 +313,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            model.incrementSelection();
+            runWithPrototype(model::incrementSelection);
             selectAndZoom(model.getSelected());
         }
 
@@ -340,7 +350,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            model.addItems(getItems());
+            runWithPrototype(() -> model.addItems(getItems()));
         }
 
         /**
@@ -379,8 +389,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            model.clear();
-            model.addItems(getItems());
+            runWithPrototype(() -> {
+                        model.clear();
+                        model.addItems(getItems());
+                    });
             selectAndZoom(model.getSelected());
         }
 
@@ -421,7 +433,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            model.markItems(getItems());
+            runWithPrototype(() -> model.markItems(getItems()));
         }
 
         /**
@@ -442,7 +454,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    private static class MarkAction extends JosmAction implements ListSelectionListener {
+    private class MarkAction extends JosmAction implements ListSelectionListener {
 
         private static final long serialVersionUID = -2258731277129598880L;
         TodoListModel model;
@@ -461,7 +473,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            model.markItems(model.getSelected());
+            runWithPrototype(() -> model.markItems(model.getSelected()));
             selectAndZoom(model.getSelected());
         }
 

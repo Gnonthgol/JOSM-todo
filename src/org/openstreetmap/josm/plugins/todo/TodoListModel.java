@@ -6,6 +6,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,8 +37,8 @@ import org.openstreetmap.josm.gui.util.TableHelper;
  */
 public class TodoListModel extends AbstractListModel<TodoListItem> implements DataSetListener {
 
-    private final ArrayList<TodoListItem> todoList = new ArrayList<>();
-    private final ArrayList<TodoListItem> doneList = new ArrayList<>();
+    private final List<TodoListItem> todoList = new ArrayList<>();
+    private final Collection<TodoListItem> doneList = new HashSet<>();
     private final DefaultListSelectionModel selectionModel;
 
     /**
@@ -117,11 +118,12 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
             super.fireIntervalAdded(this, 0, getSize()-1);
             selectionModel.setSelectionInterval(0, 0);
         } else {
-            todoList.ensureCapacity(size + items.size());
+            final List<TodoListItem> tempList = new ArrayList<>(items.size());
             for (TodoListItem item: items) {
                 if (!todoList.contains(item))
-                    todoList.add(item);
+                    tempList.add(item);
             }
+            todoList.addAll(tempList);
             super.fireIntervalAdded(this, size, getSize()-1);
         }
     }
@@ -176,6 +178,10 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
+    /**
+     * Mark items as done
+     * @param items The items that are done
+     */
     public void markItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
@@ -185,21 +191,38 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
 
         int sel = selectionModel.getMinSelectionIndex();
 
-        for (TodoListItem item: items) {
-            int i;
-            if ((i = todoList.indexOf(item)) != -1) {
-                todoList.remove(i);
-                doneList.add(item);
-                if (sel > i)
-                    sel--;
-            }
+        this.selectionModel.setValueIsAdjusting(true);
+        // For very large lists, the indexOf operation becomes very expensive due to the equals method
+        final Map<TodoListItem, Integer> indexList = new HashMap<>(todoList.size());
+        for (int i = 0; i < todoList.size(); i++) {
+            indexList.put(todoList.get(i), i);
         }
+        final int[] indices = items.stream().parallel().mapToInt(item -> {
+            Integer i = indexList.get(item);
+            if (i != null) {
+                return i;
+            }
+            return todoList.indexOf(item);
+        }).sorted().toArray();
+        final List<TodoListItem> tempDoneList = new ArrayList<>(indices.length);
+        for (int index = indices.length - 1; index >= 0; index--) {
+            final TodoListItem item = todoList.get(index);
+            todoList.remove(index);
+            tempDoneList.add(item);
+            if (sel > index)
+                sel--;
+        }
+        doneList.addAll(tempDoneList);
         if (sel >= getSize())
             sel = 0;
+        this.selectionModel.setValueIsAdjusting(false);
         super.fireIntervalRemoved(this, 0, size-1);
         selectionModel.setSelectionInterval(sel, sel);
     }
 
+    /**
+     * Clear the done and todo lists
+     */
     public void clear() {
         int size = getSize();
         doneList.clear();
@@ -208,6 +231,9 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
             super.fireIntervalRemoved(this, 0, size-1);
     }
 
+    /**
+     * Clear the done list by moving the todo items to the todo list
+     */
     public void unmarkAll() {
         if (getDoneSize() == 0)
             return;
@@ -247,7 +273,9 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
                 super.fireContentsChanged(this, i, i);
             }
         }
-        setSelected(sel);
+        if (!sel.equals(getSelected())) {
+            setSelected(sel);
+        }
     }
 
     @Override
@@ -287,14 +315,20 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
 
     @Override
     public void dataChanged(DataChangedEvent event) {
-        update(getItemsForPrimitives(event.getPrimitives()));
-        List<AbstractDatasetChangedEvent> changeEvents = event.getEvents();
+        // We cannot just call event.getPrimitives since some events just return all primitives in the dataset.
+        final Collection<OsmPrimitive> changedPrimitives;
+        final List<AbstractDatasetChangedEvent> changeEvents = event.getEvents();
         if (changeEvents != null) {
+            changedPrimitives = new HashSet<>();
             for (AbstractDatasetChangedEvent e : changeEvents) {
                 if (e instanceof PrimitivesRemovedEvent) {
                     primitivesRemoved((PrimitivesRemovedEvent) e);
                 }
+                changedPrimitives.addAll(e.getPrimitives());
             }
+        } else {
+            changedPrimitives = event.getPrimitives();
         }
+        update(getItemsForPrimitives(changedPrimitives));
     }
 }
