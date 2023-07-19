@@ -35,6 +35,7 @@ import org.openstreetmap.josm.actions.AutoScaleAction.AutoScaleMode;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.data.osm.DataSelectionListener;
 import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.IPrimitive;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.event.DatasetEventManager;
@@ -43,6 +44,9 @@ import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
+import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
+import org.openstreetmap.josm.gui.layer.AbstractOsmDataLayer;
+import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerAddEvent;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerChangeListener;
 import org.openstreetmap.josm.gui.layer.LayerManager.LayerOrderChangeEvent;
@@ -143,8 +147,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         menu.show(parent, 0, box.y + box.height);
     }
 
-    private static void zoom(OsmDataLayer layer) {
-        OsmDataLayer prev = MainApplication.getLayerManager().getEditLayer();
+    private static void zoom(Layer layer) {
+        Layer prev = MainApplication.getLayerManager().getEditLayer();
 
         try {
             MainApplication.getLayerManager().setActiveLayer(layer);
@@ -158,27 +162,27 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     protected static void selectAndZoom(TodoListItem object) {
         if (object == null) return;
-        object.layer().data.setSelected(object.primitive());
+        object.layer().getDataSet().setSelected(object.primitive());
         zoom(object.layer());
     }
 
     protected static void selectAndZoom(Collection<TodoListItem> object) {
         if (object == null || object.isEmpty()) return;
-        Map<OsmDataLayer, Set<OsmPrimitive>> sorted = object.stream()
-                .collect(Collectors.groupingBy(t -> t.layer, Collectors.mapping(t -> t.primitive, Collectors.toSet())));
+        Map<AbstractOsmDataLayer, Set<IPrimitive>> sorted = object.stream()
+                .collect(Collectors.groupingBy(TodoListItem::layer, Collectors.mapping(TodoListItem::primitive, Collectors.toSet())));
         sorted.forEach((layer, selected) -> layer.getDataSet().setSelected(selected));
         // Find the "most" important layer and zoom to the selection there
         MainLayerManager layerManager = MainApplication.getLayerManager();
-        List<OsmDataLayer> layers =
+        List<AbstractOsmDataLayer> layers =
                 // Do edit layer, then active layer, then any other layer that is in the list.
                 Stream.concat(Stream.of(layerManager.getEditLayer(), layerManager.getActiveLayer()), sorted.keySet().stream())
-                .filter(OsmDataLayer.class::isInstance)
-                .map(OsmDataLayer.class::cast)
-                .collect(Collectors.toList());
-        for (OsmDataLayer layer : layers) {
+                .filter(AbstractOsmDataLayer.class::isInstance)
+                .map(AbstractOsmDataLayer.class::cast)
+                .toList();
+        for (AbstractOsmDataLayer layer : layers) {
             if (sorted.containsKey(layer)) {
-                layer.data.setSelected(sorted.get(layer));
-                if (!layer.data.selectionEmpty()) {
+                layer.getDataSet().setSelected(sorted.get(layer));
+                if (!layer.getDataSet().selectionEmpty()) {
                     zoom(layer);
                     break;
                 }
@@ -206,11 +210,11 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     protected Collection<TodoListItem> getItems() {
-        OsmDataLayer layer = MainApplication.getLayerManager().getEditLayer();
+        OsmDataLayer layer = MainApplication.getLayerManager().getActiveDataLayer();
         if (layer == null)
             return null;
 
-        return layer.data.getSelected().stream().map(primitive -> new TodoListItem(layer, primitive)).collect(Collectors.toList());
+        return layer.getDataSet().getSelected().stream().map(primitive -> new TodoListItem(layer, primitive)).collect(Collectors.toList());
     }
 
     private void runWithPrototype(Runnable runnable) {
@@ -223,7 +227,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private static class SelectAction extends JosmAction implements ListSelectionListener {
-        private static final long serialVersionUID = -1857091860257862234L;
+        private static final long serialVersionUID = -1857091860257862231L;
         private final TodoListModel model;
 
         SelectAction(TodoListModel model) {
@@ -259,7 +263,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private static class SelectUnmarkedAction extends JosmAction implements ListSelectionListener {
-        private static final long serialVersionUID = -6464592606894190150L;
+        private static final long serialVersionUID = -6464592606894190151L;
         private final TodoListModel model;
 
         SelectUnmarkedAction(TodoListModel model) {
@@ -295,7 +299,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class PassAction extends JosmAction implements ListSelectionListener {
-        private static final long serialVersionUID = -8398150189560976350L;
+        private static final long serialVersionUID = -8398150189560976351L;
         private final TodoListModel model;
 
         PassAction(TodoListModel model) {
@@ -332,7 +336,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class AddAction extends JosmAction implements DataSelectionListener {
-        private static final long serialVersionUID = 1946908728505665454L;
+        private static final long serialVersionUID = 1946908728505665451L;
         private final TodoListModel model;
 
         AddAction(TodoListModel model) {
@@ -358,10 +362,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
          */
         @Override
         public void updateEnabledState() {
-            if (MainApplication.getLayerManager().getEditLayer() == null) {
+            if (MainApplication.getLayerManager().getActiveData() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!MainApplication.getLayerManager().getEditLayer().data.selectionEmpty());
+                setEnabled(!MainApplication.getLayerManager().getActiveData().selectionEmpty());
             }
         }
 
@@ -372,7 +376,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class ClearAndAddAction extends JosmAction implements DataSelectionListener {
-        private static final long serialVersionUID = 6877280292029877855L;
+        private static final long serialVersionUID = 6877280292029877851L;
         private final TodoListModel model;
 
         ClearAndAddAction(TodoListModel model) {
@@ -401,10 +405,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
          */
         @Override
         public void updateEnabledState() {
-            if (MainApplication.getLayerManager().getEditLayer() == null) {
+            if (MainApplication.getLayerManager().getActiveData() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!MainApplication.getLayerManager().getEditLayer().data.selectionEmpty());
+                setEnabled(!MainApplication.getLayerManager().getActiveData().selectionEmpty());
             }
         }
 
@@ -415,7 +419,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class MarkSelectedAction extends JosmAction implements DataSelectionListener {
-        private static final long serialVersionUID = 4978820863995799465L;
+        private static final long serialVersionUID = 4978820863995799461L;
         private final TodoListModel model;
 
         MarkSelectedAction(TodoListModel model) {
@@ -441,10 +445,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
          */
         @Override
         public void updateEnabledState() {
-            if (MainApplication.getLayerManager().getEditLayer() == null) {
+            if (MainApplication.getLayerManager().getActiveData() == null) {
                 setEnabled(false);
             } else {
-                setEnabled(!MainApplication.getLayerManager().getEditLayer().data.selectionEmpty());
+                setEnabled(!MainApplication.getLayerManager().getActiveData().selectionEmpty());
             }
         }
 
@@ -456,7 +460,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private class MarkAction extends JosmAction implements ListSelectionListener {
 
-        private static final long serialVersionUID = -2258731277129598880L;
+        private static final long serialVersionUID = -2258731277129598881L;
         TodoListModel model;
 
         MarkAction(TodoListModel model) {
@@ -493,7 +497,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class MarkAllAction extends JosmAction {
 
-        private static final long serialVersionUID = 4736926588271511063L;
+        private static final long serialVersionUID = 4736926588271511062L;
         TodoListModel model;
 
         MarkAllAction(TodoListModel model) {
@@ -517,7 +521,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class UnmarkAllAction extends JosmAction {
 
-        private static final long serialVersionUID = -2138098883422659122L;
+        private static final long serialVersionUID = -2138098883422659123L;
         TodoListModel model;
 
         UnmarkAllAction(TodoListModel model) {
@@ -540,7 +544,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class ClearAction extends JosmAction {
 
-        private static final long serialVersionUID = -1380109768343039668L;
+        private static final long serialVersionUID = -1380109768343039669L;
         TodoListModel model;
 
         ClearAction(TodoListModel model) {
@@ -588,8 +592,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         public void mouseClicked(MouseEvent e) {
             int idx = lstPrimitives.locationToIndex(e.getPoint());
             if (idx < 0) return;
+            // We only need to check for OsmPrimitive since highlightOnly only takes OsmPrimitive
             if (highlightEnabled && MainApplication.isDisplayingMapView() &&
-                       helper.highlightOnly(model.getElementAt(idx).primitive())) {
+                    model.getElementAt(idx).primitive() instanceof OsmPrimitive osm &&
+                       helper.highlightOnly(osm)) {
                 MainApplication.getMap().mapView.repaint();
             }
         }
@@ -661,8 +667,8 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     @Override
     public void layerRemoving(LayerRemoveEvent e) {
-        if (e.getRemovedLayer() instanceof OsmDataLayer) {
-            model.purgeLayerItems((OsmDataLayer) e.getRemovedLayer());
+        if (e.getRemovedLayer() instanceof AbstractModifiableLayer modifiableLayer) {
+            model.purgeLayerItems(modifiableLayer);
         }
     }
 

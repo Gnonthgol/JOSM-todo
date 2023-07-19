@@ -10,6 +10,7 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
 import org.openstreetmap.josm.data.osm.DefaultNameFormatter;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 
@@ -30,11 +31,11 @@ public class TodoListItemRenderer implements ListCellRenderer<TodoListItem> {
             String displayName = value.primitive().getDisplayName(DefaultNameFormatter.getInstance());
             String layerName = value.layer().getName();
             ((JLabel) def).setText(displayName + " [" + layerName + "]");
-            final ImageIcon icon = fast
-                    ? ImageProvider.get(value.primitive().getType())
-                    : ImageProvider.getPadded(value.primitive(),
+            final ImageIcon icon = !fast && (value.primitive() instanceof OsmPrimitive osmPrimitive)
+                    ? ImageProvider.getPadded(osmPrimitive,
                         // Height of component no yet known, assume the default 16px.
-                        ImageProvider.ImageSizes.SMALLICON.getImageDimension());
+                        ImageProvider.ImageSizes.SMALLICON.getImageDimension())
+                    : ImageProvider.get(value.primitive().getType());
             if (icon != null) {
                 ((JLabel) def).setIcon(icon);
             } else {

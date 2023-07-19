@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListSelectionModel;
 
+import org.openstreetmap.josm.data.osm.IPrimitive;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.PrimitiveId;
 import org.openstreetmap.josm.data.osm.event.AbstractDatasetChangedEvent;
@@ -26,7 +27,7 @@ import org.openstreetmap.josm.data.osm.event.PrimitivesRemovedEvent;
 import org.openstreetmap.josm.data.osm.event.RelationMembersChangedEvent;
 import org.openstreetmap.josm.data.osm.event.TagsChangedEvent;
 import org.openstreetmap.josm.data.osm.event.WayNodesChangedEvent;
-import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
 import org.openstreetmap.josm.gui.util.TableHelper;
 
 /**
@@ -74,9 +75,9 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
                 .collect(Collectors.toSet());
     }
 
-    public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends OsmPrimitive> primitives) {
+    public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends IPrimitive> primitives) {
         final ArrayList<TodoListItem> items = new ArrayList<>(todoList.size());
-        final Map<PrimitiveId, OsmPrimitive> primitiveMap = new HashMap<>(primitives.size());
+        final Map<PrimitiveId, IPrimitive> primitiveMap = new HashMap<>(primitives.size());
         primitives.forEach(primitive -> primitiveMap.put(primitive.getPrimitiveId(), primitive));
         for (TodoListItem todoListItem : todoList) {
             final PrimitiveId pid = todoListItem.primitive().getPrimitiveId();
@@ -128,7 +129,7 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         }
     }
 
-    public boolean purgeLayerItems(OsmDataLayer layer) {
+    public boolean purgeLayerItems(AbstractModifiableLayer layer) {
         int n = getSize() - 1;
         boolean changed = todoList.removeIf(i -> layer.equals(i.layer()));
         if (changed) {

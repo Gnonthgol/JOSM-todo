@@ -7,6 +7,9 @@
     <property name="plugin.description" value="Adds a todo list dialog that makes it easy to go through large lists of objects"/>
     <property name="plugin.icon" value="images/dialogs/todo.png"/>
     <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/TODO_list"/>
+    <property name="plugin.minimum.java.version" value="17"/>
+    <property name="java.lang.version" value="17"/>
+    <property name="plugin.canloadatruntime" value="true"/>
 
     <target name="additional-manifest">
         <manifest file="MANIFEST" mode="update">
