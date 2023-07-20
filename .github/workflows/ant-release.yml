@@ -9,8 +9,5 @@ jobs:
     uses: JOSM/JOSMPluginAction/.github/workflows/ant.yml@v1
     with:
       josm-revision: "r14221"
-      update-pluginssource: true
-    secrets:
-      trac-username: ${{ secrets.TRAC_USERNAME }}
-      trac-password: ${{ secrets.TRAC_PASSWORD }}
+      java-version: 17
 
