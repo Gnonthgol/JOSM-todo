@@ -224,9 +224,10 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
             }
             return todoList.indexOf(item);
         }).sorted().toArray();
-        final List<TodoListItem> tempDoneList = new ArrayList<>(indices.length);
-        for (int index = indices.length - 1; index >= 0; index--) {
-            final TodoListItem item = todoList.get(index);
+        final var tempDoneList = new ArrayList<TodoListItem>(indices.length);
+        for (var i = indices.length - 1; i >= 0; i--) {
+            final var index = indices[i];
+            final var item = todoList.get(index);
             todoList.remove(index);
             tempDoneList.add(item);
             if (sel > index)
