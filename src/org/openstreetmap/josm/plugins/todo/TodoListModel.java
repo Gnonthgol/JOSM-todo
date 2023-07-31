@@ -32,7 +32,7 @@ import org.openstreetmap.josm.gui.util.TableHelper;
 
 /**
  * The list model for the todo list items.
- *
+ * <p>
  * The model also maintains a list of already completed items
  *
  */
@@ -60,27 +60,27 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         return todoList.size();
     }
 
-    public boolean isSelectionEmpty() {
+    boolean isSelectionEmpty() {
         return selectionModel.isSelectionEmpty();
     }
 
-    public int getDoneSize() {
+    int getDoneSize() {
         return doneList.size();
     }
 
-    public synchronized Collection<TodoListItem> getSelected() {
+    synchronized Collection<TodoListItem> getSelected() {
         return IntStream.range(0, getSize())
                 .filter(selectionModel::isSelectedIndex)
                 .mapToObj(todoList::get)
                 .collect(Collectors.toSet());
     }
 
-    public Collection<TodoListItem> getItemsForPrimitives(Collection<? extends IPrimitive> primitives) {
+    Collection<TodoListItem> getItemsForPrimitives(Collection<? extends IPrimitive> primitives) {
         final ArrayList<TodoListItem> items = new ArrayList<>(todoList.size());
         final Map<PrimitiveId, IPrimitive> primitiveMap = new HashMap<>(primitives.size());
         primitives.forEach(primitive -> primitiveMap.put(primitive.getPrimitiveId(), primitive));
-        for (TodoListItem todoListItem : todoList) {
-            final PrimitiveId pid = todoListItem.primitive().getPrimitiveId();
+        for (var todoListItem : todoList) {
+            final var pid = todoListItem.primitive().getPrimitiveId();
             if (primitiveMap.containsKey(pid)
                 && todoListItem.layer().getDataSet().equals(primitiveMap.get(pid).getDataSet())) {
                 items.add(todoListItem);
@@ -90,11 +90,14 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         return items;
     }
 
-    public List<TodoListItem> getTodoList() {
+    List<TodoListItem> getTodoList() {
         return todoList;
     }
 
-    public void incrementSelection() {
+    /**
+     * Increment the selection
+     */
+    void incrementSelection() {
         int idx;
         if (getSize() == 0)
             return;
@@ -103,20 +106,24 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         else
             idx = selectionModel.getMinSelectionIndex() + 1;
 
-        if (idx > getSize()-1)
-            idx = getSize()-1;
+        if (idx > getSize() - 1)
+            idx = getSize() - 1;
 
         selectionModel.setSelectionInterval(idx, idx);
     }
 
-    public void addItems(Collection<TodoListItem> items) {
+    /**
+     * Add items to the model
+     * @param items The items to add
+     */
+    void addItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
         doneList.removeAll(items);
-        int size = getSize();
+        final var size = getSize();
         if (size == 0) {
             todoList.addAll(items);
-            super.fireIntervalAdded(this, 0, getSize()-1);
+            super.fireIntervalAdded(this, 0, getSize() - 1);
             selectionModel.setSelectionInterval(0, 0);
         } else {
             final List<TodoListItem> tempList = new ArrayList<>(items.size());
@@ -125,11 +132,16 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
                     tempList.add(item);
             }
             todoList.addAll(tempList);
-            super.fireIntervalAdded(this, size, getSize()-1);
+            super.fireIntervalAdded(this, size, getSize() - 1);
         }
     }
 
-    public boolean purgeLayerItems(AbstractModifiableLayer layer) {
+    /**
+     * Remove items that are in a specified layer
+     * @param layer The layer to filter on
+     * @return {@code true} if the list items changed
+     */
+    boolean purgeLayerItems(AbstractModifiableLayer layer) {
         int n = getSize() - 1;
         boolean changed = todoList.removeIf(i -> layer.equals(i.layer()));
         if (changed) {
@@ -153,12 +165,15 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         selectionModel.setSelectionInterval(sel, sel);
     }
 
-    public synchronized void setSelected(Collection<TodoListItem> sel) {
+    synchronized void setSelected(Collection<TodoListItem> sel) {
         TableHelper.setSelectedIndices(selectionModel,
                 sel != null ? sel.stream().mapToInt(todoList::indexOf) : IntStream.empty());
     }
 
-    public void markAll() {
+    /**
+     * Mark all as done
+     */
+    void markAll() {
         int size = getSize();
         if (size == 0)
             return;
@@ -167,7 +182,11 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         super.fireIntervalRemoved(this, 0, size-1);
     }
 
-    public void removeItems(Collection<TodoListItem> items) {
+    /**
+     * Remove the specified items
+     * @param items The items to remove
+     */
+    void removeItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
 
@@ -183,7 +202,7 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
      * Mark items as done
      * @param items The items that are done
      */
-    public void markItems(Collection<TodoListItem> items) {
+    void markItems(Collection<TodoListItem> items) {
         if (items == null || items.isEmpty())
             return;
         int size = getSize();
@@ -194,11 +213,11 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
 
         this.selectionModel.setValueIsAdjusting(true);
         // For very large lists, the indexOf operation becomes very expensive due to the equals method
-        final Map<TodoListItem, Integer> indexList = new HashMap<>(todoList.size());
-        for (int i = 0; i < todoList.size(); i++) {
+        final var indexList = new HashMap<TodoListItem, Integer>(todoList.size());
+        for (var i = 0; i < todoList.size(); i++) {
             indexList.put(todoList.get(i), i);
         }
-        final int[] indices = items.stream().parallel().mapToInt(item -> {
+        final var indices = items.stream().parallel().mapToInt(item -> {
             Integer i = indexList.get(item);
             if (i != null) {
                 return i;
@@ -238,24 +257,28 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
     public void unmarkAll() {
         if (getDoneSize() == 0)
             return;
-        int size = getSize();
+        var size = getSize();
+        todoList.addAll(doneList);
+        doneList.clear();
         if (size == 0) {
-            todoList.addAll(doneList);
-            doneList.clear();
-            super.fireIntervalAdded(this, 0, getSize()-1);
+            super.fireIntervalAdded(this, 0, getSize() - 1);
             selectionModel.setSelectionInterval(0, 0);
         } else {
-            todoList.addAll(doneList);
-            doneList.clear();
-            super.fireIntervalAdded(this, size, getSize()-1);
+            super.fireIntervalAdded(this, size, getSize() - 1);
         }
     }
 
-    public String getSummary() {
-        int totalSize = getSize()+getDoneSize();
-        if (getSize() == 0 && getDoneSize() == 0)
+    /**
+     * Get a summary for this model
+     * @return The summary string
+     */
+    String getSummary() {
+        int totalSize = getSize() + getDoneSize();
+        if (totalSize == 0) {
             return tr("Todo list");
-        else return tr("Todo list {0}/{1} ({2}%)", getDoneSize(), totalSize, 100.0*getDoneSize()/totalSize);
+        } else {
+            return tr("Todo list {0}/{1} ({2}%)", getDoneSize(), totalSize, 100.0 * getDoneSize() / totalSize);
+        }
     }
 
     /**
@@ -264,12 +287,12 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
      *
      * @param toUpdate the collection of items to update
      */
-    public synchronized void update(Collection<? extends TodoListItem> toUpdate) {
+    synchronized void update(Collection<? extends TodoListItem> toUpdate) {
         if (toUpdate == null) return;
         if (toUpdate.isEmpty()) return;
-        Collection<TodoListItem> sel = getSelected();
-        for (TodoListItem p: toUpdate) {
-            int i = todoList.indexOf(p);
+        final var sel = getSelected();
+        for (var p : toUpdate) {
+            final var i = todoList.indexOf(p);
             if (i >= 0) {
                 super.fireContentsChanged(this, i, i);
             }
@@ -318,12 +341,12 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
     public void dataChanged(DataChangedEvent event) {
         // We cannot just call event.getPrimitives since some events just return all primitives in the dataset.
         final Collection<OsmPrimitive> changedPrimitives;
-        final List<AbstractDatasetChangedEvent> changeEvents = event.getEvents();
+        final var changeEvents = event.getEvents();
         if (changeEvents != null) {
             changedPrimitives = new HashSet<>();
-            for (AbstractDatasetChangedEvent e : changeEvents) {
-                if (e instanceof PrimitivesRemovedEvent) {
-                    primitivesRemoved((PrimitivesRemovedEvent) e);
+            for (var e : changeEvents) {
+                if (e instanceof PrimitivesRemovedEvent primitivesRemovedEvent) {
+                    primitivesRemoved(primitivesRemovedEvent);
                 }
                 changedPrimitives.addAll(e.getPrimitives());
             }

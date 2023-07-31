@@ -4,15 +4,16 @@ package org.openstreetmap.josm.plugins.todo;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.Component;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,6 +66,7 @@ import org.openstreetmap.josm.tools.Shortcut;
  */
 public class TodoDialog extends ToggleDialog implements PropertyChangeListener, LayerChangeListener {
 
+    @Serial
     private static final long serialVersionUID = 3590739974800809827L;
 
     private final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel();
@@ -109,35 +111,35 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         lstPrimitives.setTransferHandler(null);
 
         // the select action
-        SideButton selectButton = new SideButton(actSelect);
+        final var selectButton = new SideButton(actSelect);
         lstPrimitives.getSelectionModel().addListSelectionListener(actSelect);
         actSelect.updateEnabledState();
 
         // the add button
-        SideButton addButton = new SideButton(actAdd);
+        final var addButton = new SideButton(actAdd);
         actAdd.updateEnabledState();
 
         // the clear and add button
         addButton.createArrow(l -> showPopupMenu(addButton, actClearAndAdd), true);
 
         // the pass button
-        SideButton passButton = new SideButton(actPass);
+        final var passButton = new SideButton(actPass);
         lstPrimitives.getSelectionModel().addListSelectionListener(actPass);
 
         // the mark button
-        SideButton markButton = new SideButton(actMark);
+        final var markButton = new SideButton(actMark);
         lstPrimitives.getSelectionModel().addListSelectionListener(actMark);
 
         // the mark from map button
-        SideButton markSelectedButton = new SideButton(actMarkSelected);
+        final var markSelectedButton = new SideButton(actMarkSelected);
 
         createLayout(lstPrimitives, true, Arrays.asList(selectButton, addButton, passButton, markButton, markSelectedButton));
     }
 
     private static void showPopupMenu(Component parent, Object... menuItems) {
-        final JPopupMenu menu = new JPopupMenu();
-        final Rectangle box = parent.getBounds();
-        for (Object item : menuItems) {
+        final var menu = new JPopupMenu();
+        final var box = parent.getBounds();
+        for (var item : menuItems) {
             if (item instanceof Action) {
                 menu.add((Action) item);
             } else {
@@ -160,13 +162,13 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         }
     }
 
-    protected static void selectAndZoom(TodoListItem object) {
+    static void selectAndZoom(TodoListItem object) {
         if (object == null) return;
         object.layer().getDataSet().setSelected(object.primitive());
         zoom(object.layer());
     }
 
-    protected static void selectAndZoom(Collection<TodoListItem> object) {
+    static void selectAndZoom(Collection<TodoListItem> object) {
         if (object == null || object.isEmpty()) return;
         Map<AbstractOsmDataLayer, Set<IPrimitive>> sorted = object.stream()
                 .collect(Collectors.groupingBy(TodoListItem::layer, Collectors.mapping(TodoListItem::primitive, Collectors.toSet())));
@@ -209,10 +211,10 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
         SelectionEventManager.getInstance().removeSelectionListener(actMarkSelected);
     }
 
-    protected Collection<TodoListItem> getItems() {
+    Collection<TodoListItem> getItems() {
         OsmDataLayer layer = MainApplication.getLayerManager().getActiveDataLayer();
         if (layer == null)
-            return null;
+            return Collections.emptyList();
 
         return layer.getDataSet().getSelected().stream().map(primitive -> new TodoListItem(layer, primitive)).collect(Collectors.toList());
     }
@@ -227,6 +229,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private static class SelectAction extends JosmAction implements ListSelectionListener {
+        @Serial
         private static final long serialVersionUID = -1857091860257862231L;
         private final TodoListModel model;
 
@@ -263,6 +266,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private static class SelectUnmarkedAction extends JosmAction implements ListSelectionListener {
+        @Serial
         private static final long serialVersionUID = -6464592606894190151L;
         private final TodoListModel model;
 
@@ -299,6 +303,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class PassAction extends JosmAction implements ListSelectionListener {
+        @Serial
         private static final long serialVersionUID = -8398150189560976351L;
         private final TodoListModel model;
 
@@ -336,6 +341,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class AddAction extends JosmAction implements DataSelectionListener {
+        @Serial
         private static final long serialVersionUID = 1946908728505665451L;
         private final TodoListModel model;
 
@@ -376,6 +382,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class ClearAndAddAction extends JosmAction implements DataSelectionListener {
+        @Serial
         private static final long serialVersionUID = 6877280292029877851L;
         private final TodoListModel model;
 
@@ -419,6 +426,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     }
 
     private class MarkSelectedAction extends JosmAction implements DataSelectionListener {
+        @Serial
         private static final long serialVersionUID = 4978820863995799461L;
         private final TodoListModel model;
 
@@ -460,6 +468,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private class MarkAction extends JosmAction implements ListSelectionListener {
 
+        @Serial
         private static final long serialVersionUID = -2258731277129598881L;
         TodoListModel model;
 
@@ -497,6 +506,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class MarkAllAction extends JosmAction {
 
+        @Serial
         private static final long serialVersionUID = 4736926588271511062L;
         TodoListModel model;
 
@@ -521,6 +531,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class UnmarkAllAction extends JosmAction {
 
+        @Serial
         private static final long serialVersionUID = -2138098883422659123L;
         TodoListModel model;
 
@@ -544,6 +555,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
 
     private static class ClearAction extends JosmAction {
 
+        @Serial
         private static final long serialVersionUID = -1380109768343039669L;
         TodoListModel model;
 
@@ -611,6 +623,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
      * A right-click popup context menu for setting options and performing other functions on the todo list items.
      */
     class TodoPopup extends ListPopupMenu {
+        @Serial
         private static final long serialVersionUID = 7359564238177893009L;
 
         TodoPopup(JList<TodoListItem> list) {
