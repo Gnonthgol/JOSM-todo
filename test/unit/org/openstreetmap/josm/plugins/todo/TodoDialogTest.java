@@ -1,6 +1,7 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.todo;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -107,7 +108,24 @@ class TodoDialogTest {
         assertTrue(this.model.getTodoList().isEmpty());
     }
 
+    /**
+     * Non-regression test for #23104: `Mark Selected` should account for items not in the list
+     */
     @Test
-    void testNonRegression23092() {
+    void testNonRegression23104() throws Exception {
+        // Sort the list for stability in tests
+        final var list = new ArrayList<>(this.ds.allPrimitives());
+        list.sort(Comparator.comparing(prim -> prim.get("access")));
+        this.ds.setSelected(list.get(0));
+        this.actAdd.actionPerformed(null);
+        final var actMarkSelected = (JosmAction) tryToReadFieldValue("actMarkSelected");
+        assertEquals(1, this.model.getSize());
+        assertSame(list.get(0), this.model.getElementAt(0).primitive());
+        this.ds.setSelected(list.get(1));
+        assertDoesNotThrow(() -> actMarkSelected.actionPerformed(null));
+        this.ds.setSelected(list.get(1), list.get(2));
+        assertDoesNotThrow(() -> actMarkSelected.actionPerformed(null));
+        this.ds.setSelected(list);
+        assertDoesNotThrow(() -> actMarkSelected.actionPerformed(null));
     }
 }
