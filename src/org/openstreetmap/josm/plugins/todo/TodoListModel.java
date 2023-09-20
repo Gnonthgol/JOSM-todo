@@ -4,6 +4,7 @@ package org.openstreetmap.josm.plugins.todo;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import org.openstreetmap.josm.data.osm.event.TagsChangedEvent;
 import org.openstreetmap.josm.data.osm.event.WayNodesChangedEvent;
 import org.openstreetmap.josm.gui.layer.AbstractModifiableLayer;
 import org.openstreetmap.josm.gui.util.TableHelper;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * The list model for the todo list items.
@@ -58,6 +60,15 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
     @Override
     public int getSize() {
         return todoList.size();
+    }
+
+    /**
+     * Check if an item is done
+     * @param todoListItem The item to look for
+     * @return {@code true} if the item has been marked as done
+     */
+    boolean isDone(TodoListItem todoListItem) {
+        return this.doneList.contains(todoListItem);
     }
 
     boolean isSelectionEmpty() {
@@ -294,11 +305,19 @@ public class TodoListModel extends AbstractListModel<TodoListItem> implements Da
         if (toUpdate == null) return;
         if (toUpdate.isEmpty()) return;
         final var sel = getSelected();
+        var updated = new int[toUpdate.size()];
+        var index = 0;
         for (var p : toUpdate) {
             final var i = todoList.indexOf(p);
             if (i >= 0) {
-                super.fireContentsChanged(this, i, i);
+                updated[index] = i;
+                index++;
             }
+        }
+        updated = Arrays.copyOf(updated, index);
+        Arrays.sort(updated);
+        for (int[] group : Utils.groupIntegers(updated)) {
+            super.fireContentsChanged(this, group[0], group[1]);
         }
         if (!sel.equals(getSelected())) {
             setSelected(sel);

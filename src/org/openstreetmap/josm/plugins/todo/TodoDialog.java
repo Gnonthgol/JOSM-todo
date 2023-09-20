@@ -70,7 +70,7 @@ public class TodoDialog extends ToggleDialog implements PropertyChangeListener, 
     private static final long serialVersionUID = 3590739974800809827L;
 
     private final DefaultListSelectionModel selectionModel = new DefaultListSelectionModel();
-    private final TodoListModel model = new TodoListModel(selectionModel);
+    final TodoListModel model = new TodoListModel(selectionModel);
     private final JList<TodoListItem> lstPrimitives = new JList<>(model);
     private final AddAction actAdd = new AddAction(model);
     private final SelectAction actSelect = new SelectAction(model);
